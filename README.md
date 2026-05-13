@@ -1,36 +1,190 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 MONOLITH
 
-## Getting Started
+Monolith is a modern SaaS platform built by the FRICOIN MAFIA collective.
 
-First, run the development server:
+The goal of this project is to create a scalable, secure, and professional file-sharing and collaboration platform powered by modern technologies and a strong engineering culture.
+
+---
+
+# 🌍 Vision
+
+Monolith is more than a project.
+
+It is a collaborative startup initiative where African builders, developers, and creators work together to build real software products with real ownership and real impact.
+
+We believe in:
+
+* Building fast
+* Shipping real products
+* Learning through execution
+* Creating global-level software from Africa
+
+---
+
+# 🧱 Tech Stack
+
+## Frontend
+
+* Next.js
+* React
+* TailwindCSS
+* TypeScript
+
+## Backend
+
+* Golang
+* WebSocket
+* REST APIs
+* MongoDB
+
+## Infrastructure
+
+* Docker
+* Cloud Deployment
+* CI/CD (planned)
+
+---
+
+# ⚡ Current Features
+
+* File upload system
+* Real-time capabilities
+* Authentication system
+* File management
+* Backend API architecture
+* Frontend dashboard
+* Responsive foundation
+
+---
+
+# 🎯 Current Focus
+
+The backend architecture is already established.
+
+Current collaboration mainly focuses on:
+
+* Frontend improvements
+* UI/UX redesign
+* Responsive experience
+* Professional dashboard design
+* Better upload experience
+* Design system consistency
+
+---
+
+# 👥 Collaboration Workflow
+
+This project uses a professional GitHub workflow.
+
+## Main Branches
+
+### `main`
+
+Stable production-ready code.
+
+### `develop`
+
+Main development branch.
+
+### `feature/*`
+
+Feature-specific branches.
+
+Example:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+feature/upload-ui
+feature/dashboard-redesign
+feature/mobile-responsive
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# 🔥 Contribution Process
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 1. Clone the repository
 
-## Learn More
+```bash
+git clone REPOSITORY_URL
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 2. Switch to develop
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+git checkout develop
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 3. Create a feature branch
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+git checkout -b feature/your-feature-name
+```
+
+---
+
+## 4. Push changes
+
+```bash
+git push origin feature/your-feature-name
+```
+
+---
+
+## 5. Open Pull Request
+
+Create a Pull Request to:
+
+```bash
+develop
+```
+
+All pull requests are reviewed before merging.
+
+---
+
+# 📋 Contribution Rules
+
+* Keep code clean and readable
+* Do not push directly to `main`
+* Use meaningful commit messages
+* Respect project architecture
+* Communicate before major changes
+* Stay professional and collaborative
+
+---
+
+# ⚠️ Important
+
+This is not a practice repository.
+
+Monolith is being built as a real SaaS product with long-term goals and real ownership opportunities for active contributors.
+
+Only serious builders are encouraged to participate.
+
+---
+
+# 🔐 Ownership & Contributions
+
+All contributions are subject to the Monolith Contributor Agreement.
+
+Ownership distribution is based on:
+
+* Real contribution
+* Activity
+* Consistency
+* Project impact
+
+Inactive contributors may lose ownership eligibility.
+
+---
+
+# 🚀 FRICOIN MAFIA
+
+Built by FRICOIN MAFIA — a collective of African builders creating real startups and scalable software products.
+
+CODE. BUILD. OWN. REPEAT.
+
