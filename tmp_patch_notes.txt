@@ -1,0 +1,1 @@
+Preparing to replace cellColor and cell rendering in profile-output.tsx; then add contributionsMap prop to ProfilePyw and render colored square based on date level.

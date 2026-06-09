@@ -4,6 +4,7 @@ export interface ProjectFile {
   fileType: string;
   fileSize: number;
   storageKey?: string;
+  downloadUrl?: string;
   projectId: string;
   companyId: string;
   uploadedBy: string;
@@ -20,6 +21,7 @@ export interface BackendFile {
   file_type: string;
   file_size: number;
   storage_key?: string;
+  download_url?: string;
   project_id: string;
   company_id: string;
   uploaded_by: string;

@@ -133,3 +133,27 @@ body {
 ::-webkit-scrollbar-track {
   background: var(--surface-container-low);
 }
+
+.chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(160, 174, 192, 0.35) transparent;
+}
+
+.chat-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(160, 174, 192, 0.35);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(160, 174, 192, 0.55);
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

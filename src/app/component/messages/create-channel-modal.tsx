@@ -4,83 +4,97 @@ import { useState, useEffect } from "react";
 import { ConversationService } from "@/services/conversation.service";
 import { AuthService } from "@/services/auth.service";
 import { ProjectService } from "@/services/project.service";
-import { UserService } from "@/services/user.service";
+import type { Project } from "@/types/project";
 
 type CreateChannelModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  projectId: string;
-};
-
-// Interface pour stocker les membres avec leurs noms
-type MemberItem = {
-  id: string;
-  name: string;
+  projectId?: string;
 };
 
 export function CreateChannelModal({ isOpen, onClose, projectId }: CreateChannelModalProps) {
   const [channelName, setChannelName] = useState("");
-  const [members, setMembers] = useState<MemberItem[]>([]);
-  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
-  
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(projectId);
+  const [projectMemberIds, setProjectMemberIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingProjects, setIsFetchingProjects] = useState(false);
   const [isFetchingMembers, setIsFetchingMembers] = useState(false);
   const [error, setError] = useState("");
 
-  // Charge la liste des membres de l'entreprise quand la modale s'ouvre
   useEffect(() => {
-    async function loadMembers() {
+    async function loadProjects() {
       if (!isOpen) return;
-      
+
+      setIsFetchingProjects(true);
+      try {
+        const session = AuthService.getSession();
+        if (!session?.user.id || !session.companyId) return;
+
+        const userProjects = await ProjectService.listByUser(session.user.id, session.companyId);
+        setProjects(userProjects);
+
+        const defaultProjectId = projectId || userProjects[0]?.id;
+        setSelectedProjectId(defaultProjectId);
+      } catch (err) {
+        console.error("Failed to load projects for channel creation", err);
+      } finally {
+        setIsFetchingProjects(false);
+      }
+    }
+
+    loadProjects();
+  }, [isOpen, projectId]);
+
+  useEffect(() => {
+    async function loadProjectMembers() {
+      if (!selectedProjectId || !isOpen) {
+        setProjectMemberIds([]);
+        return;
+      }
+
       setIsFetchingMembers(true);
       try {
         const session = AuthService.getSession();
-        if (!session || !session.companyId) return;
+        if (!session?.user.id || !session.companyId) {
+          setProjectMemberIds([]);
+          return;
+        }
 
-        const project = await ProjectService.getById(projectId, {
+        const project = await ProjectService.getById(selectedProjectId, {
           requesterId: session.user.id,
           requesterCompanyId: session.companyId,
           token: session.accessToken,
         });
 
-        // On récupère le détail de chaque membre du projet
-        if (project.members) {
-          const membersData = await Promise.all(
-            project.members.map(async (m) => {
-              try {
-                const u = await UserService.getById(m.userId);
-                return { id: m.userId, name: u.name };
-              } catch {
-                return { id: m.userId, name: "Utilisateur inconnu" };
-              }
-            })
-          );
-          
-          const validMembers = membersData.filter((m): m is MemberItem => m !== null);
-          const projectMembers = validMembers.filter((m) => m.id !== session.user.id);
-          setMembers(projectMembers);
-          setSelectedMembers(new Set(projectMembers.map((m) => m.id)));
-        }
+        const memberIds = project.members?.map((member) => member.userId) ?? [];
+        const uniqueMemberIds = Array.from(new Set(memberIds));
+        setProjectMemberIds(uniqueMemberIds);
       } catch (err) {
         console.error("Failed to load project members", err);
+        setProjectMemberIds([]);
       } finally {
         setIsFetchingMembers(false);
       }
     }
 
-    loadMembers();
+    loadProjectMembers();
+  }, [selectedProjectId, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setChannelName("");
+      setProjects([]);
+      setProjectMemberIds([]);
+      setError("");
+      return;
+    }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const toggleMember = (id: string) => {
-    setSelectedMembers((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+  const currentProjectName = selectedProject?.projectName || "Projet inconnu";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,29 +103,32 @@ export function CreateChannelModal({ isOpen, onClose, projectId }: CreateChannel
 
     try {
       const session = AuthService.getSession();
-      if (!session || !session.companyId) throw new Error("Session invalide");
+      if (!session?.user.id || !session.companyId || !session.accessToken) {
+        throw new Error("Session invalide");
+      }
+      if (!selectedProjectId) {
+        throw new Error("Veuillez sélectionner un projet.");
+      }
+      if (projectMemberIds.length === 0) {
+        throw new Error("Impossible de récupérer les membres du projet.");
+      }
 
-      // Le créateur fait obligatoirement partie des membres
-      const membersToInclude = [session.user.id, ...Array.from(selectedMembers)];
+      const membersToInclude = Array.from(new Set([...projectMemberIds, session.user.id]));
 
-      // Création de la conversation
-      await ConversationService.create({
+      const conversation = await ConversationService.create({
         name: channelName,
-        type: "GROUP", // On force le type GROUP pour un channel
+        type: "GROUP",
         companyId: session.companyId,
-        projectId: projectId,
+        projectId: selectedProjectId,
         creatorId: session.user.id,
         creatorCompanyId: session.companyId,
         members: membersToInclude,
         token: session.accessToken,
       });
 
-      // Réinitialisation
       setChannelName("");
-      setSelectedMembers(new Set());
       onClose();
-      
-      // Recharge la page pour afficher le nouveau channel
+
       window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors de la création du channel.");
@@ -129,13 +146,38 @@ export function CreateChannelModal({ isOpen, onClose, projectId }: CreateChannel
         >
           <span className="material-symbols-outlined">close</span>
         </button>
-        
-        <h2 className="text-2xl font-bold mb-2">Créer un Channel</h2>
+
+        <h2 className="text-2xl font-bold mb-2">Créer un Channel de projet</h2>
         <p className="text-sm text-on-surface-variant mb-6">
-          Un nouveau canal de discussion pour l&apos;équipe du projet.
+          Sélectionnez le projet lié au channel et tous ses membres seront automatiquement ajoutés.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+              Projet lié
+            </label>
+            <div className="relative">
+              <select
+                value={selectedProjectId ?? ""}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="w-full rounded-lg bg-surface-container-low px-4 py-3 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary"
+              >
+                {isFetchingProjects ? (
+                  <option value="">Chargement des projets...</option>
+                ) : projects.length === 0 ? (
+                  <option value="">Aucun projet disponible</option>
+                ) : (
+                  projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.projectName}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          </div>
+
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
               Nom du Channel
@@ -150,34 +192,20 @@ export function CreateChannelModal({ isOpen, onClose, projectId }: CreateChannel
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-              Membres ({selectedMembers.size} sélectionné{selectedMembers.size > 1 ? 's' : ''})
-            </label>
-            
-            <div className="max-h-40 overflow-y-auto rounded-lg bg-surface-container-lowest p-3 border border-outline-variant/20">
-              {isFetchingMembers ? (
-                <p className="text-xs text-center text-on-surface-variant py-4">Chargement des membres...</p>
-              ) : members.length === 0 ? (
-                <p className="text-xs text-center text-on-surface-variant py-4">Aucun autre membre dans l&apos;entreprise.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {members.map((member) => (
-                    <li key={member.id}>
-                      <label className="flex items-center cursor-pointer gap-3">
-                        <input
-                          type="checkbox"
-                          className="rounded border-outline-variant text-primary focus:ring-primary"
-                          checked={selectedMembers.has(member.id)}
-                          onChange={() => toggleMember(member.id)}
-                        />
-                        <span className="text-sm text-on-surface">{member.name}</span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          <div className="rounded-lg bg-surface-container-lowest p-4 text-sm text-on-surface-variant border border-outline-variant/20">
+            {isFetchingMembers ? (
+              <p>Chargement des membres du projet...</p>
+            ) : selectedProject ? (
+              <>
+                <p className="font-medium text-on-surface">Projet sélectionné :</p>
+                <p className="text-sm text-on-surface">{currentProjectName}</p>
+                <p className="mt-2">
+                  Ce channel sera automatiquement partagé avec <span className="font-semibold">{projectMemberIds.length}</span> membre{projectMemberIds.length > 1 ? "s" : ""} du projet.
+                </p>
+              </>
+            ) : (
+              <p>Choisissez un projet pour que ses membres aient accès au channel.</p>
+            )}
           </div>
 
           {error && (
@@ -188,7 +216,7 @@ export function CreateChannelModal({ isOpen, onClose, projectId }: CreateChannel
 
           <button
             type="submit"
-            disabled={isLoading || !channelName.trim()}
+            disabled={isLoading || !channelName.trim() || !selectedProjectId}
             className="w-full rounded-lg bg-primary py-3 font-semibold text-on-primary transition hover:opacity-90 disabled:opacity-50"
           >
             {isLoading ? "Création..." : "Créer le Channel"}

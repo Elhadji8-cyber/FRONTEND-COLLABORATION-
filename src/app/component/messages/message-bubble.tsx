@@ -88,10 +88,10 @@ export function MessageBubble({
                 {(hasContent || hasAttachments) && (
                     <div
                         className={cn(
-                            "inline-block w-fit max-w-full min-w-0 overflow-hidden rounded-2xl border px-4 py-3 shadow-sm",
+                            "inline-block w-fit max-w-full min-w-0 overflow-hidden rounded-[24px] border px-4 py-3 shadow-sm",
                             isOwn
                                 ? "border-primary/20 bg-primary text-on-primary"
-                                : "border-outline-variant/20 bg-surface-container-lowest text-on-surface",
+                                : "border-transparent bg-surface-container-lowest text-on-surface",
                         )}
                     >
                         {hasContent && (

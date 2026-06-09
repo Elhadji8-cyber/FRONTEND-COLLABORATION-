@@ -14,17 +14,18 @@ type EngineeringOutputProps = {
 };
 
 function cellColor(level: ContributionLevel) {
+  // GitHub-like contribution palette (hex)
   switch (level) {
     case 0:
-      return "bg-surface-container";
+      return "#ebedf0"; // empty
     case 1:
-      return "bg-primary/20";
+      return "#9be9a8"; // light
     case 2:
-      return "bg-primary/45";
+      return "#40c463"; // medium
     case 3:
-      return "bg-primary";
+      return "#30a14e"; // dark
     default:
-      return "bg-surface-container";
+      return "#ebedf0";
   }
 }
 
@@ -56,7 +57,8 @@ export function ProfileEngineeringOutput({
             <div
               key={cell.date}
               title={`${cell.date} - ${cell.count} contribution${cell.count > 1 ? "s" : ""}`}
-              className={`h-3 w-3 rounded-sm ${cellColor(cell.level)}`}
+              className={`h-3 w-3 rounded-sm`}
+              style={{ backgroundColor: cellColor(cell.level) }}
             />
           ))}
         </div>

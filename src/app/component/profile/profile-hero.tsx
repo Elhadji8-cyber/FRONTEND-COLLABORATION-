@@ -13,12 +13,16 @@ type ProfileHeroProps = {
     profile: ProfileHeroData;
     onEditClick?: () => void;
     onSendMessageClick?: () => void;
+    isOwnProfile?: boolean;
+    onViewMessagesClick?: () => void;
 };
 
 export function ProfileHero({
     profile,
     onEditClick,
     onSendMessageClick,
+    isOwnProfile,
+    onViewMessagesClick,
 }: ProfileHeroProps) {
     return (
         <section className="mb-12">
@@ -55,13 +59,6 @@ export function ProfileHero({
                             </span>
                             <span className="text-outline-variant">•</span>
                             <span className="text-sm">{profile.company}</span>
-                            <span className="text-outline-variant">•</span>
-                            <span className="flex items-center gap-1 text-sm">
-                                <span className="material-symbols-outlined text-base">
-                                    location_on
-                                </span>
-                                {profile.location}
-                            </span>
                         </div>
 
                         <div className="mt-6 flex flex-wrap justify-center gap-4 md:justify-start">
@@ -73,13 +70,23 @@ export function ProfileHero({
                                 Edit Profile
                             </button>
 
-                            <button
-                                type="button"
-                                onClick={onSendMessageClick}
-                                className="rounded-lg bg-surface-container-highest px-6 py-2 text-sm font-bold text-on-secondary-container transition active:scale-95"
-                            >
-                                Send Message
-                            </button>
+                            {isOwnProfile ? (
+                                <button
+                                    type="button"
+                                    onClick={onViewMessagesClick}
+                                    className="rounded-lg bg-surface-container-highest px-6 py-2 text-sm font-bold text-on-secondary-container transition active:scale-95"
+                                >
+                                    View Messages
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={onSendMessageClick}
+                                    className="rounded-lg bg-surface-container-highest px-6 py-2 text-sm font-bold text-on-secondary-container transition active:scale-95"
+                                >
+                                    Send Message
+                                </button>
+                            )}
                         </div>
                     </div>
 

@@ -45,16 +45,16 @@ export function MessageBubble({
   isOwn,
 }: MessageBubbleProps) {
   return (
-    <div className={`flex items-start gap-3 ${isOwn ? "justify-end" : ""}`}>
+    <div className={`flex items-end gap-2 ${isOwn ? "justify-end" : "justify-start"}`}>
       {!isOwn && (
         <div className="flex-shrink-0">
-          {/* Affichage de l'avatar */}
+          {/* Affichage de l'avatar pour les messages reçus */}
           <Avatar avatarUrl={avatarUrl} senderName={senderName} />
         </div>
       )}
       <div className={`flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
-        <div className="text-xs text-gray-500">{senderName} - {sentAt}</div>
-        <div className={`p-2 rounded-lg ${isOwn ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"}`}>
+        {!isOwn && <div className="text-xs text-gray-500 px-2">{senderName}</div>}
+        <div className={`p-3 rounded-lg max-w-xs lg:max-w-md break-words ${isOwn ? "bg-blue-500 text-white rounded-br-none" : "bg-gray-200 text-gray-800 rounded-bl-none"}`}>
           {content}
           {fileId && (
             <div className="mt-2">
@@ -63,13 +63,8 @@ export function MessageBubble({
             </div>
           )}
         </div>
+        <div className={`text-xs text-gray-500 mt-1 px-2 ${isOwn ? "text-right" : "text-left"}`}>{sentAt}</div>
       </div>
-      {isOwn && (
-        <div className="flex-shrink-0">
-          {/* Affichage de l'avatar pour les messages de l'utilisateur courant */}
-          <Avatar avatarUrl={avatarUrl} senderName={senderName} />
-        </div>
-      )}
     </div>
   );
 }

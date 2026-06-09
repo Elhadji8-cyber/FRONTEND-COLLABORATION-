@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 export type CompanyMemberRow = {
   id: string;
   fullName: string;
+  name?: string;
   email: string;
   role: "Owner" | "Admin" | "Engineer" | "Viewer" | string;
   status: "Active Now" | "Offline" | "Away" | string;

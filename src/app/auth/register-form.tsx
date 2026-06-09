@@ -81,7 +81,6 @@ export function RegisterForm() {
         name: fullName,
         email,
         password,
-        role: "OWNER",
         avatarUrl: avatarPreview,
       });
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { AppShell } from "../component/layout/app-shell";
 import { ProjectCard } from "../component/dashboard/project-card";
 import { SectionTitle } from "../component/ui/section-title";
@@ -9,6 +8,7 @@ import { Button } from "../component/ui/button";
 import { AuthService } from "@/services/auth.service";
 import { ProjectService } from "@/services/project.service";
 import { CompanyService } from "@/services/company.service";
+import { UserService } from "@/services/user.service";
 import type { Project } from "@/types/project";
 
 export default function ProjectsPage() {
@@ -31,10 +31,44 @@ export default function ProjectsPage() {
                 // On récupère en parallèle les projets et l'entreprise pour vérifier le rôle
                 const [data, company] = await Promise.all([
                     ProjectService.listByUser(session.user.id, session.companyId),
-                    CompanyService.getById(session.companyId, session.user.id)
+                    CompanyService.getById(session.companyId, session.user.id),
                 ]);
-                
-                setProjects(data);
+
+                const memberIds = Array.from(
+                    new Set(
+                        data.flatMap((project) =>
+                            project.members?.map((member) => member.userId) ?? []
+                        )
+                    )
+                );
+
+                const memberProfiles = await Promise.all(
+                    memberIds.map(async (userId) => {
+                        try {
+                            const user = await UserService.getById(userId);
+                            return { userId, user };
+                        } catch {
+                            return { userId, user: null };
+                        }
+                    })
+                );
+
+                const memberMap = new Map(
+                    memberProfiles
+                        .filter((item) => item.user !== null)
+                        .map((item) => [item.userId, item.user])
+                );
+
+                const enrichedProjects = data.map((project) => ({
+                    ...project,
+                    members: project.members?.map((member) => ({
+                        ...member,
+                        name: member.name || member.role || memberMap.get(member.userId)?.name || "Membre",
+                        avatarUrl: member.avatarUrl || memberMap.get(member.userId)?.avatarUrl,
+                    })),
+                }));
+
+                setProjects(enrichedProjects);
                 setIsOwner(company.ownerId === session.user.id);
             } catch (err) {
                 setError(
@@ -93,11 +127,18 @@ export default function ProjectsPage() {
                             key={project.id}
                             id={project.id}
                             title={project.projectName}
+                            description={project.description || "Aucune description disponible"}
                             zone={project.status || "Projet"}
+                            date={project.createdAt || project.updatedAt}
                             statusLabel={project.status}
                             progress={project.status === "completed" ? 100 : 0}
                             accent="primary"
                             isOwner={isOwner}
+                            members={project.members?.map((member) => ({
+                                id: member.userId,
+                                name: member.name || member.role || "Membre",
+                                avatarUrl: member.avatarUrl,
+                            }))}
                             onOpen={(id) => {
                                 window.location.href = `/projects/${id}/files`;
                             }}
@@ -117,13 +158,6 @@ export default function ProjectsPage() {
                                 } catch (err) {
                                     alert("Erreur lors de la suppression: " + err);
                                 }
-                            }}
-                            onUpload={async (id, files) => {
-                                // Exemple de logique d'upload
-                                // const formData = new FormData();
-                                // Array.from(files).forEach((f) => formData.append("files", f));
-                                // await apiFetch(`/projects/${id}/files`, { method: "POST", body: formData });
-                                alert(`${files.length} fichier(s) sélectionné(s) pour le projet ${project.projectName}`);
                             }}
                         />
                     ))}

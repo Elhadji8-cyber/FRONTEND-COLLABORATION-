@@ -3,12 +3,14 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
+import { CiSearch } from "react-icons/ci";
 import { AppShell } from "../../../component/layout/app-shell";
 import { FilesTable, type FileRow } from "../../../component/files/files.table";
 import { SectionTitle } from "../../../component/ui/section-title";
 import { Button } from "../../../component/ui/button";
 import { FileService } from "@/services/file.service";
 import { AuthService } from "@/services/auth.service";
+import { UserService } from "@/services/user.service";
 import type { ProjectFile } from "@/types/file";
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -36,6 +38,7 @@ export default function ProjectFilesPage() {
     const projectId = params.projectId as string;
     
     const [files, setFiles] = useState<ProjectFile[]>([]);
+    const [uploaderProfiles, setUploaderProfiles] = useState<Record<string, { name: string; avatarUrl?: string }>>({});
     const [searchQuery, setSearchQuery] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
@@ -57,6 +60,27 @@ export default function ProjectFilesPage() {
                 requesterCompanyId: session.companyId,
             });
             setFiles(data);
+
+            const uploaderIds = Array.from(new Set(data.map((file) => file.uploadedBy).filter(Boolean)));
+            const profiles: Record<string, { name: string; avatarUrl?: string }> = {};
+
+            await Promise.all(
+                uploaderIds.map(async (uploaderId) => {
+                    try {
+                        const user = await UserService.getById(uploaderId);
+                        profiles[uploaderId] = {
+                            name: user.name || "Utilisateur",
+                            avatarUrl: user.avatarUrl,
+                        };
+                    } catch {
+                        profiles[uploaderId] = {
+                            name: "Utilisateur inconnu",
+                        };
+                    }
+                })
+            );
+
+            setUploaderProfiles(profiles);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Erreur lors du chargement des fichiers");
         } finally {
@@ -93,19 +117,50 @@ export default function ProjectFilesPage() {
         }
     };
 
+    const handleDownload = async (fileId: string, fileName: string) => {
+        const session = AuthService.getSession();
+        if (!session?.companyId || !session?.accessToken) {
+            alert("Session invalide.");
+            return;
+        }
+
+        try {
+            const blob = await FileService.downloadFile(fileId, session.companyId, session.accessToken);
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = fileName;
+            anchor.target = "_blank";
+            anchor.rel = "noreferrer noopener";
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            alert("Erreur lors du téléchargement : " + (err instanceof Error ? err.message : err));
+        }
+    };
+
     const filteredFiles = files.filter(f => 
         f.fileName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const fileRows: FileRow[] = filteredFiles.map(f => ({
-        id: f.id,
-        name: f.fileName,
-        type: f.fileType,
-        sizeLabel: formatBytes(f.fileSize),
-        uploadedBy: "ID: " + f.uploadedBy.substring(0, 6) + "...", // Idéalement, récupérer le nom via un UserService
-        uploadedAt: f.createdAt ? formatDate(f.createdAt) : "Inconnu",
-        icon: f.fileType.includes("pdf") ? "picture_as_pdf" : f.fileType.includes("image") ? "image" : "description"
-    }));
+    const session = AuthService.getSession();
+    const fileRows: FileRow[] = filteredFiles.map(f => {
+        const uploader = uploaderProfiles[f.uploadedBy];
+        const isCurrentUser = session?.user.id === f.uploadedBy;
+        return {
+            id: f.id,
+            name: f.fileName,
+            type: f.fileType,
+            sizeLabel: formatBytes(f.fileSize),
+            uploadedByName: uploader?.name || (isCurrentUser ? session?.user.name || "Moi" : "Utilisateur inconnu"),
+            uploadedByAvatarUrl: uploader?.avatarUrl || (isCurrentUser ? session?.user.avatarUrl : undefined),
+            uploadedAt: f.createdAt ? formatDate(f.createdAt) : "Inconnu",
+            icon: f.fileType.includes("pdf") ? "picture_as_pdf" : f.fileType.includes("image") ? "image" : "description",
+            downloadUrl: f.downloadUrl,
+        };
+    });
 
     return (
         <AppShell>
@@ -116,9 +171,7 @@ export default function ProjectFilesPage() {
                     action={
                         <div className="flex flex-col sm:flex-row gap-3 items-center">
                             <div className="relative">
-                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">
-                                    search
-                                </span>
+                                <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" />
                                 <input
                                     type="text"
                                     placeholder="Rechercher un fichier..."
@@ -156,7 +209,11 @@ export default function ProjectFilesPage() {
                         Chargement des fichiers...
                     </div>
                 ) : (
-                    <FilesTable files={fileRows} onUploadClick={() => fileInputRef.current?.click()} />
+                    <FilesTable
+                        files={fileRows}
+                        onUploadClick={() => fileInputRef.current?.click()}
+                        onDownload={handleDownload}
+                    />
                 )}
             </div>
         </AppShell>

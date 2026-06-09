@@ -14,6 +14,8 @@ export default function MessagesRedirectPage() {
     useEffect(() => {
         async function openMessages() {
             const session = AuthService.getSession();
+            const urlParams = new URLSearchParams(window.location.search);
+            const conversationId = urlParams.get("conversation_id");
 
             if (!session?.user.id || !session.companyId) {
                 router.replace("/auth/login");
@@ -29,7 +31,8 @@ export default function MessagesRedirectPage() {
                     return;
                 }
 
-                router.replace(`/projects/${projects[0].id}/messages`);
+                const target = `/projects/${projects[0].id}/messages${conversationId ? `?conversation_id=${conversationId}` : ""}`;
+                router.replace(target);
             } catch (err) {
                 setMessage("");
                 setError(err instanceof Error ? err.message : "Impossible d'ouvrir la messagerie.");

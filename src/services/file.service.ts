@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 import type { BackendFile, ProjectFile } from "@/types/file";
 
 type UploadFilePayload = {
@@ -17,6 +18,10 @@ type ListFilesByProjectParams = {
   token?: string;
 };
 
+type DownloadUrlResponse = {
+  download_url: string;
+};
+
 export function mapBackendFile(file: BackendFile): ProjectFile {
   return {
     id: file._id || file.id || "",
@@ -24,6 +29,7 @@ export function mapBackendFile(file: BackendFile): ProjectFile {
     fileType: file.file_type,
     fileSize: file.file_size,
     storageKey: file.storage_key,
+    downloadUrl: file.download_url || file.storage_key,
     projectId: file.project_id,
     companyId: file.company_id,
     uploadedBy: file.uploaded_by,
@@ -51,6 +57,58 @@ export class FileService {
     });
 
     return mapBackendFile(file);
+  }
+
+  static async getDownloadUrl(fileId: string, companyId: string): Promise<string> {
+    const params = new URLSearchParams({ requester_company_id: companyId });
+    return `/files/${fileId}/download?${params.toString()}`;
+  }
+
+  static async downloadFile(fileId: string, companyId: string, token?: string): Promise<Blob> {
+    const params = new URLSearchParams({ requester_company_id: companyId });
+    const url = `${API_BASE_URL}/files/${fileId}/download?${params.toString()}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Erreur lors du téléchargement : ${response.status} ${text}`);
+    }
+
+    return response.blob();
+  }
+
+  static async downloadFileByStorageKey(
+    storageKey: string,
+    fileName: string,
+    companyId: string,
+    token?: string,
+  ): Promise<Blob> {
+    const params = new URLSearchParams({
+      storage_key: storageKey,
+      requester_company_id: companyId,
+      file_name: fileName,
+    });
+    const url = `${API_BASE_URL}/files/download?${params.toString()}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Erreur lors du téléchargement : ${response.status} ${text}`);
+    }
+
+    return response.blob();
   }
 
   // Récupère la liste des fichiers pour un projet donné

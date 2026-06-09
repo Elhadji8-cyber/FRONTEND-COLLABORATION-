@@ -4,12 +4,14 @@ import type { BackendCompany, Company } from "@/types/company";
 type CreateCompanyPayload = {
   companyName: string;
   description?: string;
+  logoUrl?: string;
   ownerId: string;
 };
 
 type UpdateCompanyPayload = {
   companyName?: string;
   description?: string;
+  logoUrl?: string;
   subscriptionPlan?: string;
   storageLimit?: number;
   requesterId: string;
@@ -20,6 +22,7 @@ export function mapBackendCompany(company: BackendCompany): Company {
     id: company._id || company.id || "",
     companyName: company.company_name,
     description: company.description,
+    logoUrl: company.logo_url,
     ownerId: company.owner_id,
     members: company.members?.map((member) => ({
       userId: member.user_id,
@@ -43,6 +46,7 @@ export class CompanyService {
       body: JSON.stringify({
         company_name: payload.companyName,
         description: payload.description || "",
+        logo_url: payload.logoUrl || "",
         owner_id: payload.ownerId,
       }),
     });
@@ -65,6 +69,7 @@ export class CompanyService {
       body: JSON.stringify({
         company_name: payload.companyName,
         description: payload.description,
+        logo_url: payload.logoUrl,
         subscription_plan: payload.subscriptionPlan,
         storage_limit: payload.storageLimit,
         requester_id: payload.requesterId,
