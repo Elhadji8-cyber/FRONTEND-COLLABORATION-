@@ -1,6 +1,4 @@
 // src/components/profile/profile-projects.tsx
-import Image from "next/image";
-
 type ProfileProjectItem = {
     id: string;
     name: string;
@@ -43,28 +41,13 @@ export function ProfileProjects({ projects }: ProfileProjectsProps) {
                     return (
                         <article
                             key={project.id}
-                            className="group overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm transition-all hover:shadow-md"
+                            className={`group overflow-hidden rounded-2xl bg-surface-container-lowest shadow-sm transition-all hover:shadow-md border-l-4 p-5 ${accentClass}`}
                         >
-                            <div className="relative h-36 overflow-hidden bg-slate-200">
-                                <Image
-                                    src={project.imageUrl}
-                                    alt={project.name}
-                                    fill
-                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                    sizes="(max-width: 768px) 100vw, 50vw"
-                                />
-
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-                                <div className="absolute bottom-3 left-4 text-white">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
-                                        {project.category}
-                                    </p>
-                                    <p className="font-bold">{project.name}</p>
-                                </div>
-                            </div>
-
-                            <div className={`border-l-4 p-5 ${accentClass}`}>
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 text-on-surface-variant mb-2">
+                                    {project.category}
+                                </p>
+                                <p className="font-bold text-on-surface mb-4">{project.name}</p>
                                 <p className="mb-4 line-clamp-2 text-xs text-on-surface-variant">
                                     {project.description}
                                 </p>

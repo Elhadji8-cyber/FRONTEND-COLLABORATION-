@@ -30,6 +30,8 @@ export function mapBackendProject(project: BackendProject): Project {
     members: project.members?.map((member) => ({
       userId: member.user_id,
       role: member.role,
+      name: member.name,
+      avatarUrl: member.avatar_url,
       addedAt: member.added_at,
       addedBy: member.added_by,
     })),

@@ -1,6 +1,6 @@
 "use client";
 
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiSend } from "react-icons/fi";
 import { useRef, useState } from "react";
 
 type MessageInputProps = {
@@ -210,11 +210,11 @@ export function MessageInput({
                             disabled:opacity-60
                         "
                     >
-                        <span className="material-symbols-outlined">
-                            {isLoading
-                                ? "hourglass_top"
-                                : "send"}
-                        </span>
+                        {isLoading ? (
+                            <span className="material-symbols-outlined">hourglass_top</span>
+                        ) : (
+                            <FiSend size={18} />
+                        )}
                     </button>
                 </div>
 

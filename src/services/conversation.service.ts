@@ -106,4 +106,42 @@ export class ConversationService {
       token: token,
     });
   }
+
+  static async removeMember(
+    conversationId: string,
+    memberId: string,
+    requesterId: string,
+    requesterCompanyId: string,
+    token?: string
+  ) {
+    const params = new URLSearchParams({
+      requester_id: requesterId,
+      requester_company_id: requesterCompanyId,
+    });
+
+    await apiFetch(`/conversations/${conversationId}/members/${memberId}?${params.toString()}`, {
+      method: "DELETE",
+      token: token,
+    });
+  }
+
+  static async createOrGetDirectMessage(
+    otherUserId: string,
+    currentUserId: string,
+    companyId: string,
+    projectId: string,
+    token?: string
+  ): Promise<Conversation> {
+    // Créer une conversation directe en utilisant l'endpoint générique existant.
+    return this.create({
+      name: "",
+      type: "DIRECT",
+      companyId,
+      projectId,
+      creatorId: currentUserId,
+      creatorCompanyId: companyId,
+      members: [otherUserId],
+      token,
+    });
+  }
 }

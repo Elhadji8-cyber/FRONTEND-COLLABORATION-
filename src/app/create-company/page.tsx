@@ -9,6 +9,8 @@ export default function CreateCompanyPage() {
   const router = useRouter();
   const [companyName, setCompanyName] = useState("");
   const [description, setDescription] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [logoPreview, setLogoPreview] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -36,6 +38,7 @@ export default function CreateCompanyPage() {
       const company = await CompanyService.create({
         companyName,
         description,
+        logoUrl: logoUrl || undefined,
         ownerId: session.user.id,
       });
 
@@ -51,6 +54,40 @@ export default function CreateCompanyPage() {
       setIsLoading(false);
     }
   }
+
+  function handleLogoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setLogoUrl("");
+      setLogoPreview("");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("Veuillez sélectionner un fichier image valide.");
+      return;
+    }
+
+    setErrorMessage("");
+    const preview = URL.createObjectURL(file);
+    setLogoPreview(preview);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setLogoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview && logoPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
+  }, [logoPreview]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-on-surface lg:flex-row lg:p-0">
@@ -104,6 +141,31 @@ export default function CreateCompanyPage() {
                 onChange={(event) => setDescription(event.target.value)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="logoFile"
+              className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant"
+            >
+              Logo de l&apos;entreprise (image)
+            </label>
+            <div className="group relative">
+              <div className="absolute bottom-0 left-0 top-0 w-1 bg-transparent transition-all duration-200 group-focus-within:bg-primary" />
+              <input
+                id="logoFile"
+                name="logoFile"
+                type="file"
+                accept="image/*"
+                className="w-full rounded-none border-none bg-surface-container-low px-4 py-4 text-on-surface placeholder:text-outline transition-all duration-200 file:cursor-pointer file:rounded-none file:border-0 file:bg-surface-container-lowest file:px-3 file:py-2 file:text-sm file:text-on-surface"
+                onChange={handleLogoChange}
+              />
+            </div>
+            {logoPreview ? (
+              <div className="mt-3 h-24 w-24 overflow-hidden rounded-3xl border border-outline-variant/40 bg-surface-container-lowest">
+                <img src={logoPreview} alt="Aperçu du logo" className="h-full w-full object-cover" />
+              </div>
+            ) : null}
           </div>
 
           {errorMessage ? (

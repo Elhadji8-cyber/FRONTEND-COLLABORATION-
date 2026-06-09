@@ -1,10 +1,13 @@
 import Link from "next/link";
+import Image from "next/image";
+import logo from "./image/lo-go-removebg-preview.png";
 export const TopNavBar = () => {
     return (
         <nav className="fixed inset-x-0 top-0 z-50 border-b border-black/5 bg-[rgba(250,248,255,0.8)] backdrop-blur-xl">
             <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                <div className="text-xl font-black tracking-[-0.08em] text-slate-900">
-                    MONOLITH
+                <div className=" px-2 py-1">
+                    <Image src={logo} alt="Logo" className="h-17 w-25 rounded-full" />
+                    
                 </div>
 
                 <div className="hidden items-center gap-8 md:flex">

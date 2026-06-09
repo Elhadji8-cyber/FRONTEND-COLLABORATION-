@@ -10,6 +10,7 @@ export interface Company {
   id: string;
   companyName: string;
   description?: string;
+  logoUrl?: string;
   ownerId: string;
   members?: CompanyMember[];
   subscriptionPlan?: string;
@@ -32,6 +33,7 @@ export interface BackendCompany {
   id?: string;
   company_name: string;
   description?: string;
+  logo_url?: string;
   owner_id: string;
   members?: BackendCompanyMember[];
   subscription_plan?: string;

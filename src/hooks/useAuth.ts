@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authStore } from "@/store/authStore";
 import type { AuthSession } from "@/types/user";
 
 export const useAuth = () => {
-  const [session] = useState<AuthSession | null>(() => authStore.getSession());
-  const [isLoading] = useState(false);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setSession(authStore.getSession());
+    setIsLoading(false);
+  }, []);
 
   const isAuthenticated = !!session?.accessToken;
 

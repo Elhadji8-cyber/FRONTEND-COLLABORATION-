@@ -104,6 +104,7 @@ export function LoginForm() {
           <button
             type="button"
             className="text-xs font-bold text-primary hover:underline"
+            onClick={() => router.push('/auth/forgot-password')}
           >
             Forgot?
           </button>

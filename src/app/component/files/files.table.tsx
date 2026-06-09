@@ -1,14 +1,18 @@
 import Link from "next/link";
+import { CiSaveDown1 } from "react-icons/ci";
+import { IoCloudUploadOutline, IoFilter } from "react-icons/io5";
 
 export type FileRow = {
     id: string;
     name: string;
     type: string;
     sizeLabel: string;
-    uploadedBy: string;
+    uploadedByName?: string;
+    uploadedByAvatarUrl?: string;
     uploadedAt: string;
     icon?: string;
     highlighted?: boolean;
+    downloadUrl?: string;
 };
 
 type FilesTableProps = {
@@ -16,6 +20,7 @@ type FilesTableProps = {
     title?: string;
     onUploadClick?: () => void;
     onFilterClick?: () => void;
+    onDownload?: (fileId: string, fileName: string) => void;
 };
 
 export function FilesTable({
@@ -23,6 +28,7 @@ export function FilesTable({
     title = "Project Documents",
     onUploadClick,
     onFilterClick,
+    onDownload,
 }: FilesTableProps) {
     return (
         <section className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(19,27,46,0.04)]">
@@ -40,7 +46,7 @@ export function FilesTable({
                         onClick={onFilterClick}
                         className="flex items-center gap-2 rounded-lg bg-surface-container px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-high"
                     >
-                        <span className="material-symbols-outlined text-lg">filter_list</span>
+                        <IoFilter className="text-lg" />
                         Filter
                     </button>
 
@@ -49,7 +55,7 @@ export function FilesTable({
                         onClick={onUploadClick}
                         className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
                     >
-                        <span className="material-symbols-outlined text-lg">upload</span>
+                        <IoCloudUploadOutline className="text-lg" />
                         Upload
                     </button>
                 </div>
@@ -71,8 +77,11 @@ export function FilesTable({
                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">
                                 Uploaded By
                             </th>
-                            <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">
                                 Date
+                            </th>
+                            <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">
+                                Action
                             </th>
                         </tr>
                     </thead>
@@ -98,9 +107,51 @@ export function FilesTable({
                                 </td>
 
                                 <td className="px-6 py-4 text-sm text-on-surface-variant">{file.sizeLabel}</td>
-                                <td className="px-6 py-4 text-sm font-medium text-on-surface">{file.uploadedBy}</td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        {file.uploadedByAvatarUrl ? (
+                                            <img
+                                                src={file.uploadedByAvatarUrl}
+                                                alt={file.uploadedByName ?? "Uploader"}
+                                                className="h-8 w-8 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container text-sm font-semibold text-on-surface-variant">
+                                                <span className="material-symbols-outlined">person</span>
+                                            </div>
+                                        )}
+                                        <span className="text-sm font-medium text-on-surface">
+                                            {file.uploadedByName ?? "Utilisateur inconnu"}
+                                        </span>
+                                    </div>
+                                </td>
                                 <td className="px-6 py-4 text-right text-sm text-on-surface-variant">
                                     {file.uploadedAt}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    {onDownload ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => onDownload(file.id, file.name)}
+                                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                                        >
+                                            <CiSaveDown1 className="text-base" />
+                                            Télécharger
+                                        </button>
+                                    ) : file.downloadUrl ? (
+                                        <a
+                                            href={file.downloadUrl}
+                                            download
+                                            target="_blank"
+                                            rel="noreferrer noopener"
+                                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                                        >
+                                            <CiSaveDown1 className="text-base" />
+                                            Télécharger
+                                        </a>
+                                    ) : (
+                                        <span className="text-sm text-on-surface-variant">Indisponible</span>
+                                    )}
                                 </td>
                             </tr>
                         ))}

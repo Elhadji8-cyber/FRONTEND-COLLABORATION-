@@ -104,6 +104,10 @@ export async function apiFetch<T>(
   // http://localhost:8080/api/v1 + /messages/
   const isFormData = fetchOptions.body instanceof FormData;
 
+  if (!API_BASE_URL) {
+    throw new Error("API_BASE_URL is not configured. Set NEXT_PUBLIC_API_BASE_URL in your environment.");
+  }
+
   const request = async (bearerToken?: string) =>
     fetch(`${API_BASE_URL}${path}`, {
       ...fetchOptions,
@@ -115,7 +119,13 @@ export async function apiFetch<T>(
       cache: "no-store",
     });
 
-  let res = await request(authToken);
+  let res;
+  try {
+    res = await request(authToken);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Network request failed to ${API_BASE_URL}${path}: ${message}`);
+  }
 
   // Ton backend renvoie souvent { success, message, data, error }.
   // On lit ce format une seule fois ici pour simplifier les services.

@@ -1,6 +1,8 @@
 export interface ProjectMember {
   userId: string;
   role: string;
+  name?: string;
+  avatarUrl?: string;
   addedAt?: string;
   addedBy?: string;
 }
@@ -20,6 +22,8 @@ export interface Project {
 export interface BackendProjectMember {
   user_id: string;
   role: string;
+  name?: string;
+  avatar_url?: string;
   added_at?: string;
   added_by?: string;
 }

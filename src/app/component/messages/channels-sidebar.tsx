@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/cn";
 
 export type ChannelItem = {
@@ -15,7 +16,9 @@ export type DirectMessageItem = {
     name: string;
     href?: string;
     online?: boolean;
+    active?: boolean;
     onClick?: () => void;
+    avatarUrl?: string;
 };
 
 type ChannelsSidebarProps = {
@@ -32,7 +35,7 @@ export function ChannelsSidebar({
     onAddChannel,
 }: ChannelsSidebarProps) {
     return (
-        <aside className="hidden w-80 shrink-0 border-r border-outline-variant/10 bg-surface-container-low p-6 xl:block">
+        <aside className="hidden w-80 shrink-0 border-r border-outline-variant/10 bg-surface-container-low p-6 xl:block h-full overflow-y-auto chat-scrollbar">
             <div className="mb-6">
                 <div className="flex items-center justify-between">
                     <p className="font-inter text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
@@ -94,16 +97,43 @@ export function ChannelsSidebar({
 
                 <div className="space-y-1">
                     {directMessages.map((dm) => {
+                        const avatarSrc = dm.avatarUrl || "/default-avatar.png";
                         const content = (
                             <>
-                                <div
-                                    className={cn(
-                                        "mr-3 h-2 w-2 rounded-full",
-                                        dm.online ? "bg-green-500" : "border border-on-surface-variant bg-transparent"
+                                <div className="relative flex-shrink-0">
+                                    {dm.avatarUrl && dm.avatarUrl.startsWith("data:image/") ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img
+                                            src={dm.avatarUrl}
+                                            alt={`${dm.name}'s avatar`}
+                                            className="h-8 w-8 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <Image
+                                            src={avatarSrc}
+                                            alt={`${dm.name}'s avatar`}
+                                            width={32}
+                                            height={32}
+                                            className="rounded-full"
+                                            style={{ width: 32, height: 32 }}
+                                        />
                                     )}
-                                />
-                                {dm.name}
+                                    <div
+                                        className={cn(
+                                            "absolute bottom-0 right-0 h-2 w-2 rounded-full border border-surface-container-low",
+                                            dm.online ? "bg-green-500" : "bg-gray-400"
+                                        )}
+                                    />
+                                </div>
+                                <span className="truncate flex-1">{dm.name}</span>
                             </>
+                        );
+
+                        const dmClass = cn(
+                            "flex w-full items-center rounded-md px-3 py-2 text-left text-sm transition",
+                            dm.active
+                                ? "bg-surface-variant text-primary font-semibold"
+                                : "text-on-surface-variant hover:bg-surface-container"
                         );
 
                         return dm.onClick ? (
@@ -111,7 +141,7 @@ export function ChannelsSidebar({
                                 key={dm.id}
                                 type="button"
                                 onClick={dm.onClick}
-                                className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-on-surface-variant transition hover:bg-surface-container"
+                                className={dmClass}
                             >
                                 {content}
                             </button>
@@ -119,7 +149,7 @@ export function ChannelsSidebar({
                             <Link
                                 key={dm.id}
                                 href={dm.href || "#"}
-                                className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-on-surface-variant transition hover:bg-surface-container"
+                                className={dmClass}
                             >
                                 {content}
                             </Link>

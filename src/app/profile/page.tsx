@@ -1,16 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "../component/layout/app-shell";
 import { ProfileHero, type ProfileHeroData } from "../component/profile/profile-hero";
-import { ProfileActivity } from "../component/profile/profile-activity";
+// ProfileActivity removed per request (not needed)
 import { ProfileProjects } from "../component/profile/profile-projects";
 import dynamic from "next/dynamic";
 import { AuthService } from "@/services/auth.service";
 import { CompanyService } from "@/services/company.service";
 import { ProjectService } from "@/services/project.service";
-import { Project } from "@/types/project";
+import { PywService } from "@/services/pyw.service";
+import type { Project } from "@/types/project";
+import type { Pyw } from "@/types/pyw";
+import { ProfilePyw } from "../component/profile/profile-pyw";
+import type { EngineeringOutputCell } from "../component/profile/profile-output";
 
-const ProfileEngineeringOutput = dynamic(() => import("../component/profile/profile-output").then(mod => mod.ProfileEngineeringOutput), { ssr: false });
+// ProfileEngineeringOutput will be rendered inside ProfilePyw now
 
 
 // On garde seulement la structure vide, les données viendront du state
@@ -23,14 +28,15 @@ const defaultProfileData: ProfileHeroData = {
     avatarUrl: "",
 };
 
-// Les activités et contributions sont vides en attendant d'avoir ces données du backend
+// Les activités sont vides en attendant d'avoir ces données du backend
 const activities: { id: string; title: string; description: string; dateLabel: string; color: "primary" | "tertiary" | "muted" }[] = [];
-const cells: { date: string; count: number; level: 0 | 1 | 2 | 3 }[] = [];
-const totalContributions = 0;
 
 export default function ProfilePage() {
+    const router = useRouter();
     const [profile, setProfile] = useState<ProfileHeroData>(defaultProfileData);
     const [userProjects, setUserProjects] = useState<{ id: string; name: string; category: string; description: string; status: "completed" | "active"; accentColor: "primary" | "tertiary"; imageUrl: string }[]>([]);
+    const [pywWorks, setPywWorks] = useState<Pyw[]>([]);
+    const [projectNamesById, setProjectNamesById] = useState<Record<string, string>>({});
 
     // Etat pour la biographie
     const [bio, setBio] = useState("");
@@ -55,16 +61,35 @@ export default function ProfilePage() {
             let loadedProjects: Project[] = [];
             try {
                 loadedProjects = await ProjectService.listByUser(session.user.id, session.companyId);
-                const mappedProjects = loadedProjects.map(p => ({
-                    id: p.id,
-                    name: p.projectName,
-                    category: p.status || "Projet",
-                    description: p.description || "Aucune description",
-                    status: (p.status === "completed" ? "completed" : "active") as "completed" | "active",
-                    accentColor: "primary" as const,
-                    imageUrl: "",
-                }));
+                const projectNameMap: Record<string, string> = {};
+                const mappedProjects = loadedProjects.map(p => {
+                    projectNameMap[p.id] = p.projectName;
+                    return {
+                        id: p.id,
+                        name: p.projectName,
+                        category: p.status || "Projet",
+                        description: p.description || "Aucune description",
+                        status: (p.status === "completed" ? "completed" : "active") as "completed" | "active",
+                        accentColor: "primary" as const,
+                        imageUrl: "",
+                    };
+                });
                 setUserProjects(mappedProjects);
+                setProjectNamesById(projectNameMap);
+
+                const pywResults = await Promise.all(
+                    loadedProjects.map(async (project) => {
+                        try {
+                            return await PywService.listByProject(project.id);
+                        } catch (error) {
+                            console.error(error);
+                            return [] as Pyw[];
+                        }
+                    })
+                );
+
+                const allWorks = pywResults.flat().filter((work) => work.userId === session.user.id);
+                setPywWorks(allWorks);
             } catch (err) {
                 console.error(err);
             }
@@ -95,6 +120,46 @@ export default function ProfilePage() {
         setIsEditingBio(false);
     };
 
+    const contributions = useMemo<EngineeringOutputCell[]>(() => {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - 364);
+
+        const counter = new Map<string, number>();
+        pywWorks.forEach((work) => {
+            if (!work.createdAt) return;
+            const date = new Date(work.createdAt);
+            if (Number.isNaN(date.getTime())) return;
+            date.setHours(0, 0, 0, 0);
+            if (date < start) return;
+            const key = date.toISOString().slice(0, 10);
+            counter.set(key, (counter.get(key) || 0) + 1);
+        });
+
+        return Array.from({ length: 365 }, (_, index) => {
+            const date = new Date(start);
+            date.setDate(start.getDate() + index);
+            const key = date.toISOString().slice(0, 10);
+            const count = counter.get(key) || 0;
+            const level = (count === 0 ? 0 : count === 1 ? 1 : count < 3 ? 2 : 3) as EngineeringOutputCell["level"];
+            return {
+                date: key,
+                count,
+                level,
+            };
+        });
+    }, [pywWorks]);
+
+    const totalContributions = pywWorks.length;
+
+    const contributionsMap = useMemo(() => {
+        const m: Record<string, number> = {};
+        contributions.forEach((c) => {
+            m[c.date] = c.level;
+        });
+        return m;
+    }, [contributions]);
+
     return (
         <AppShell active="profile">
             <div className="mx-auto max-w-7xl space-y-8 px-6 py-8 lg:px-8">
@@ -102,6 +167,10 @@ export default function ProfilePage() {
                     profile={profile}
                     onEditClick={() => {
                         console.log("Edit profile");
+                    }}
+                    isOwnProfile={true}
+                    onViewMessagesClick={() => {
+                        router.push("/messages");
                     }}
                     onSendMessageClick={() => {
                         // Action d'envoi de message (ex: aller sur la page de messagerie)
@@ -156,17 +225,17 @@ export default function ProfilePage() {
                     )}
                 </section>
 
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                    <div className="space-y-8 lg:col-span-2">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <div className="overflow-auto pr-4">
                         <ProfileProjects projects={userProjects.length > 0 ? userProjects : []} />
                     </div>
-
-                    <div className="space-y-8">
-                        <ProfileActivity activities={activities} />
-                        <ProfileEngineeringOutput
+                    <div className="overflow-auto pr-4">
+                        <ProfilePyw
+                            works={pywWorks}
+                            projectNames={projectNamesById}
+                            contributionsMap={contributionsMap}
+                            contributions={contributions}
                             totalContributions={totalContributions}
-                            cells={cells}
-                            title="Contributions Techniques"
                         />
                     </div>
                 </div>

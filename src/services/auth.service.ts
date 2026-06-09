@@ -37,9 +37,13 @@ export function mapBackendUser(user: BackendUser): User {
 
 export class AuthService {
   static async login(payload: LoginPayload): Promise<AuthSession> {
+    const normalizedEmail = payload.email.trim().toLowerCase();
     const response = await apiFetch<BackendAuthResponse>("/users/login", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        email: normalizedEmail,
+      }),
     });
 
     const session = {
@@ -54,18 +58,42 @@ export class AuthService {
   }
 
   static async register(payload: RegisterPayload): Promise<User> {
+    const normalizedEmail = payload.email.trim().toLowerCase();
     const user = await apiFetch<BackendUser>("/users/signup", {
       method: "POST",
       body: JSON.stringify({
         name: payload.name,
-        email: payload.email,
+        email: normalizedEmail,
         password: payload.password,
-        role: payload.role || "OWNER",
         avatar_url: payload.avatarUrl,
       }),
     });
 
     return mapBackendUser(user);
+  }
+
+  static async forgotPassword(email: string): Promise<void> {
+    await apiFetch<void>("/users/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    });
+  }
+
+  static async resetPassword(token: string, newPassword: string): Promise<AuthSession> {
+    const response = await apiFetch<BackendAuthResponse>("/users/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+
+    const session = {
+      accessToken: response.access_token,
+      refreshToken: response.refresh_token,
+      user: mapBackendUser(response.user),
+      companyId: this.getCompanyId(),
+    };
+
+    this.saveSession(session);
+    return session;
   }
 
   static async refreshToken(): Promise<AuthSession | null> {
