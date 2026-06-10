@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AuthVisualPanel } from "./auth-visual-panel";
-import logo from "../component/components/image/lo-go-removebg-preview.png";
+import logo from "../component/components/image/noolith.png";
 
 type AuthShellProps = {
   title: string;
@@ -26,17 +26,17 @@ export function AuthShell({
     <main className="flex min-h-screen w-full flex-col md:h-screen md:flex-row">
       <section className="z-10 flex w-full flex-col justify-between bg-surface p-8 md:w-[45%] md:p-12 lg:w-[40%] lg:p-20">
         <header className="flex items-center gap-3">
-          <div className="flex h-19 w-20 items-center justify-center rounded-lg ">
+          <div className="flex h-20 w-20 items-center justify-center rounded-lg ">
             <Image
               src={logo}
-              alt="Monolith logo"
-              className=" h-19 w-20 object-contain"
+              alt="Noolith logo"
+              className=" h-20 w-20 object-contain"
               width={32}
               height={32}
             />
           </div>
           <h1 className="text-xl font-black uppercase tracking-tighter text-on-surface">
-            Monolith
+           
           </h1>
         </header>
 

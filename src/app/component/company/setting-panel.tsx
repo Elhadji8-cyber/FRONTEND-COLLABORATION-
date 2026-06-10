@@ -30,7 +30,7 @@ export function SettingsPanel({
                     </h2>
                     <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
                         Configure fundamental workspace parameters and security protocols for
-                        the Monolith ecosystem.
+                        the Monoolith ecosystem.
                     </p>
                 </div>
 

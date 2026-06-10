@@ -7,7 +7,7 @@ type AuthVisualPanelProps = {
 };
 
 export function AuthVisualPanel({
-  quote = `"Precision is the foundation of every great structure. Monolith brings your entire engineering lifecycle into focus."`,
+  quote = `"Precision is the foundation of every great structure. Monoolith brings your entire engineering lifecycle into focus."`,
   footerLabel = "Project Alpha | Site Operations v4.2",
 }: AuthVisualPanelProps) {
   return (

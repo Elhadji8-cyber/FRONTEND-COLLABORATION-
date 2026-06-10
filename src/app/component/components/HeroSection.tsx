@@ -1,48 +1,69 @@
 import Image from "next/image";
-import archi from "../image/architector.png"
+import { motion } from "framer-motion";
+
+
 const heroBackground =
-    "linear-gradient(rgba(250, 248, 255, 0.9), rgba(250, 248, 255, 0.8)), url(https://lh3.googleusercontent.com/aida-public/AB6AXuDDdBj4GN_PgOWO8orr9BpuOv3Gvfn5ZafIWoNO3khtgl-d9aW-evi9aPk6YF2Ml06sgk5N4rv3QRGgaN-y1cFSKqZguPh4y83ZWXkbNEuILBAt12Rp6yqN986H-nYE-XsZlrOaN3s7Y905IVXxyc3Iwh8lf85Xq_3GZPYn5ULy6zdMOqtR4n_HtcXd1qZldN-18sWCfncBu1GofVT7fsaR6iY6Q9j41s8EOSikZoLo15MwVb2GeWZTkoBU2Mvt3XDQ0XHvTMzR3Q)";
+    "linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92), rgba(37, 99, 235, 0.95))";
+
 export const HeroSection = () => {
     return (
         <section
-            className="relative flex min-h-[780px] items-center overflow-hidden pt-10"
+            className="relative flex min-h-[720px] items-center overflow-hidden pt-10"
             style={{
                 backgroundImage: heroBackground,
                 backgroundPosition: "center",
                 backgroundSize: "cover",
             }}
         >
-            <div className="mx-auto grid w-full max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-                <div className="z-10 py-12 lg:py-20">
-                    <div className="mb-6 inline-flex items-center rounded-full bg-[color:rgba(0,74,198,0.1)] px-3 py-1 text-xs font-bold uppercase tracking-[0.25em] text-[var(--primary)]">
-                        Engineering Intelligence
+            <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:px-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                    className="z-10 flex flex-col justify-center py-12 lg:py-20"
+                >
+                    <div className="mb-6 size-fit inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.25em] text-blue-100 backdrop-blur-md">
+                        Monoolith system
                     </div>
 
-                    <h1 className="mb-8 max-w-3xl text-4xl font-black leading-[0.95] tracking-[-0.07em] text-[var(--on-surface)] sm:text-5xl lg:text-7xl">
-                        The Architectural{" "}
-                        <span className="text-[var(--primary)]">Monolith</span>
+                    <h1 className="mb-8 max-w-3xl text-4xl font-black leading-[0.95] tracking-[-0.07em] text-white sm:text-5xl lg:text-7xl">
+                        La plateforme moderne pour
+                        <span className="text-blue-100"> gérer vos projets, fichiers et équipes</span>
                     </h1>
 
-                    <p className="mb-10 max-w-xl text-lg leading-relaxed text-[var(--on-surface-variant)] sm:text-xl">
-                        Precision-driven collaboration for modern engineering. Scale your
-                        infrastructure projects with a unified digital job site built for
-                        performance.
+                    <p className="mb-10 max-w-xl text-lg leading-relaxed text-blue-100/95 sm:text-xl">
+                        Centralisez la gestion des tâches, le chat, la collaboration, le versioning et le suivi des fichiers dans un environnement clair et rapide.
                     </p>
 
                     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-                        <button className="rounded-xl bg-[var(--primary)] px-8 py-4 text-lg font-extrabold text-white shadow-xl shadow-[color:rgba(0,74,198,0.2)] transition-all hover:shadow-2xl hover:shadow-[color:rgba(0,74,198,0.3)] active:scale-95">
-                            Get Started
+                        <button className="rounded-xl bg-white px-8 py-4 text-lg font-extrabold text-blue-700 shadow-xl shadow-blue-950/20 transition-all hover:-translate-y-0.5 hover:bg-blue-50 active:scale-95">
+                            Commencer
                         </button>
-                        <button className="rounded-xl bg-[var(--surface-container-highest)] px-8 py-4 text-lg font-extrabold text-[var(--primary)] transition-all hover:bg-[var(--surface-container-high)] active:scale-95">
-                            Book a Demo
+                        <button className="rounded-xl border border-white/20 bg-white/10 px-8 py-4 text-lg font-extrabold text-white backdrop-blur-md transition-all hover:bg-white/15 active:scale-95">
+                            Voir les modules
                         </button>
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="relative hidden lg:block">
-                    <div className="absolute -inset-4 -rotate-3 rounded-[2rem] bg-[color:rgba(0,74,198,0.05)]" />
-                    <Image src={archi} alt="Architecture" loading="eager" className="relative rounded-xl shadow-2xl transition-all duration-700 hover:grayscale-0" />
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, delay: 0.05 }}
+                    className="relative hidden lg:flex lg:items-center lg:justify-center"
+                >
+                    <div className="relative w-full max-w-[700px] rounded-[28px] bg-white/10 p-3 shadow-2xl shadow-blue-950/30 ring-1 ring-white/10 backdrop-blur-md">
+                        <div className="absolute inset-x-3 top-3 bottom-3 rounded-[24px] bg-white/95 shadow-inner" />
+                        <video
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            className="relative z-10 h-[430px] w-full rounded-[22px] border border-white/10 object-cover shadow-xl shadow-blue-950/20"
+                        >
+                            <source src="/video/monoolith.mp4" type="video/mp4" />
+                        </video>
+                    </div>
+                </motion.div>
             </div>
         </section>
     );

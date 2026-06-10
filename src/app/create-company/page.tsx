@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/services/auth.service";
 import { CompanyService } from "@/services/company.service";
+import logo from "../component/components/image/noolith.png";
 
 export default function CreateCompanyPage() {
   const router = useRouter();
@@ -93,8 +95,14 @@ export default function CreateCompanyPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-on-surface lg:flex-row lg:p-0">
       <div className="w-full max-w-md p-8 lg:p-12">
         <div className="mb-12">
-          <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container text-on-primary">
-            <span className="material-symbols-outlined text-2xl">business</span>
+          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-xl bg-primary-container p-2 text-on-primary">
+            <Image
+              src={logo}
+              alt="Noolith logo"
+              width={64}
+              height={64}
+              className="h-full w-full object-contain"
+            />
           </div>
           <h1 className="mb-2 text-4xl font-bold tracking-tight">Créez votre entreprise</h1>
           <p className="text-on-surface-variant">Configurez votre espace de travail pour commencer.</p>
@@ -114,7 +122,7 @@ export default function CreateCompanyPage() {
                 id="companyName"
                 name="companyName"
                 type="text"
-                placeholder="Ex: Monolith Engineering"
+                placeholder="Ex: Monoolith Engineering"
                 className="w-full rounded-none border-none bg-surface-container-low px-4 py-4 text-on-surface placeholder:text-outline transition-all duration-200 focus:bg-surface-container-highest focus:ring-0"
                 value={companyName}
                 onChange={(event) => setCompanyName(event.target.value)}

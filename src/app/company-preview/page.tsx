@@ -9,7 +9,7 @@ export default function CompanyPreviewPage() {
             <div className="space-y-8">
                 <CompanyOverview
                     company={{
-                        companyName: "Planify Inc.",
+                        companyName: "Monoolith Inc.",
                         description:
                             "Plateforme collaborative de gestion de projets et planification hebdomadaire. Optimisez votre équipe avec des outils modernes et intuitifs.",
                         storageUsedLabel: "12.5",

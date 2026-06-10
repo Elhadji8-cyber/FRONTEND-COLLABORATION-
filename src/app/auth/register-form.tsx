@@ -153,7 +153,7 @@ export function RegisterForm() {
             id="email"
             name="email"
             type="email"
-            placeholder="name@monolith.com"
+            placeholder="name@monoolith.com"
             className="w-full rounded-none border-none bg-surface-container-low px-4 py-4 text-on-surface placeholder:text-outline transition-all duration-200 focus:bg-surface-container-highest focus:ring-0"
             value={email}
             onChange={(event) => setEmail(event.target.value)}

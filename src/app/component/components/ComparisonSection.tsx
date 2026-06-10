@@ -1,83 +1,66 @@
-import { ArchitectureIcon, SyncIcon, UsbIcon } from "./icons";
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+const solutions = [
+    {
+        title: "Team",
+        href: "/solutions/team",
+        items: ["Storage", "Task", "Manage workers", "Chat", "Share files"],
+        description: "Un environnement simple pour les équipes opérationnelles qui veulent collaborer sans friction.",
+    },
+    {
+        title: "Company",
+        href: "/solutions/company",
+        items: ["Entreprise", "Civil engineer", "Architect", "Bureau de contrôle", "Collaboration"],
+        description: "Des espaces adaptés aux organisations qui gèrent plusieurs métiers et projets en parallèle.",
+    },
+    {
+        title: "Industry",
+        href: "/solutions/industry",
+        items: ["Gestion entreprise", "Gestion projet", "Gestion d’équipe", "Chat", "Versioning", "Validation"],
+        description: "Des workflows prêts à l’emploi pour les environnements industriels et de contrôle qualité.",
+    },
+];
+
 export const ComparisonSection = () => {
     return (
-        <section
-            id="solutions"
-            className="relative overflow-hidden bg-[var(--on-background)] py-20 text-white sm:py-24 lg:py-32"
-        >
+        <section id="solutions" className="relative overflow-hidden bg-[var(--on-background)] py-20 text-white sm:py-24 lg:py-32">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-24">
-                    <div>
-                        <h2 className="mb-8 text-4xl font-black leading-[1.1] tracking-[-0.06em] sm:text-5xl">
-                            The Evolution of Engineering Identity
-                        </h2>
-                        <p className="mb-12 text-lg leading-relaxed text-slate-400 sm:text-xl">
-                            Legacy firms still ship physical drives. Leaders use Monolith. We
-                            transform fragmented data silos into a singular, authoritative
-                            source of truth.
-                        </p>
+                <motion.div
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.35 }}
+                    className="mb-10 max-w-3xl"
+                >
+                    <p className="mb-4 text-sm font-semibold uppercase tracking-[0.35em] text-blue-200">Solutions</p>
+                    <h2 className="mb-4 text-4xl font-black tracking-[-0.06em] text-white sm:text-5xl">Des solutions adaptées à chaque type d’organisation.</h2>
+                    <p className="text-lg leading-relaxed text-slate-300 sm:text-xl">Chaque colonne correspond à un usage spécifique avec des modules clés et des pages dédiées pour aller plus loin.</p>
+                </motion.div>
 
-                        <div className="space-y-6">
-                            <div className="flex items-start gap-4 rounded-lg border border-white/10 bg-white/5 p-6">
-                                <div className="rounded bg-[color:rgba(186,26,26,0.2)] p-2">
-                                    <UsbIcon className="h-6 w-6 text-[var(--error)]" />
-                                </div>
-                                <div>
-                                    <h4 className="mb-1 text-lg font-bold">
-                                        Before: Fragmented USB Sharing
-                                    </h4>
-                                    <p className="text-sm text-slate-400">
-                                        Prone to loss, physical damage, and version conflicts that
-                                        delay project milestones.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-4 rounded-lg border border-[color:rgba(0,74,198,0.2)] bg-[color:rgba(0,74,198,0.1)] p-6">
-                                <div className="rounded bg-[var(--primary)] p-2">
-                                    <SyncIcon className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <h4 className="mb-1 text-lg font-bold">
-                                        After: Secure Cloud Fabric
-                                    </h4>
-                                    <p className="text-sm text-slate-400">
-                                        Instant synchronization across global teams with
-                                        military-grade encryption.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="relative">
-                        <div className="absolute -inset-20 rounded-full bg-[color:rgba(0,74,198,0.2)] blur-[120px]" />
-                        <div className="relative rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl sm:p-8">
-                            <div className="mb-8 flex items-center justify-between border-b border-slate-800 pb-4">
-                                <div className="font-mono text-xs text-[var(--primary)]">
-                                    BUILD_VERSION_v4.2.0
-                                </div>
-                                <div className="flex gap-2">
-                                    <div className="h-3 w-3 rounded-full bg-slate-700" />
-                                    <div className="h-3 w-3 rounded-full bg-slate-700" />
-                                    <div className="h-3 w-3 rounded-full bg-slate-700" />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="h-8 w-3/4 rounded bg-slate-800" />
-                                <div className="h-8 w-1/2 rounded bg-slate-800" />
-                                <div className="flex h-40 items-center justify-center rounded border border-[color:rgba(0,74,198,0.3)] bg-[color:rgba(0,74,198,0.1)]">
-                                    <ArchitectureIcon className="h-12 w-12 text-[var(--primary)]" />
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="h-12 rounded bg-slate-800" />
-                                    <div className="h-12 rounded bg-slate-800" />
-                                    <div className="h-12 rounded bg-slate-800" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div className="grid gap-6 lg:grid-cols-3">
+                    {solutions.map((solution, index) => (
+                        <motion.article
+                            key={solution.title}
+                            initial={{ opacity: 0, y: 18 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, amount: 0.2 }}
+                            transition={{ duration: 0.35, delay: index * 0.05 }}
+                            className="rounded-3xl border border-white/10 bg-white/6 p-6 shadow-2xl shadow-black/15 backdrop-blur-md"
+                        >
+                            <p className="text-sm uppercase tracking-[0.35em] text-blue-200">{solution.title}</p>
+                            <h3 className="mt-3 text-2xl font-bold text-white">{solution.title}</h3>
+                            <p className="mt-3 text-sm text-slate-300">{solution.description}</p>
+                            <ul className="mt-6 space-y-3 text-sm text-slate-100">
+                                {solution.items.map((item) => (
+                                    <li key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">• {item}</li>
+                                ))}
+                            </ul>
+                            <Link href={solution.href} className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15">
+                                Ouvrir la page dédiée
+                            </Link>
+                        </motion.article>
+                    ))}
                 </div>
             </div>
         </section>
