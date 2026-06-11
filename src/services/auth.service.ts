@@ -50,7 +50,7 @@ export class AuthService {
       accessToken: response.access_token,
       refreshToken: response.refresh_token,
       user: mapBackendUser(response.user),
-      companyId: this.getCompanyId(),
+      companyId: "",
     };
 
     this.saveSession(session);
@@ -129,6 +129,8 @@ export class AuthService {
 
     if (session.companyId) {
       localStorage.setItem(COMPANY_ID_KEY, session.companyId);
+    } else {
+      localStorage.removeItem(COMPANY_ID_KEY);
     }
   }
 
@@ -179,6 +181,13 @@ export class AuthService {
       return;
     }
     localStorage.setItem(COMPANY_ID_KEY, companyId);
+  }
+
+  static clearCompanyId() {
+    if (typeof window === "undefined") {
+      return;
+    }
+    localStorage.removeItem(COMPANY_ID_KEY);
   }
 
   static logout() {

@@ -53,6 +53,8 @@ export function LoginForm() {
       const companies = await CompanyService.listByUser(session.user.id);
       if (companies.length > 0) {
         AuthService.setCompanyId(companies[0].id);
+      } else {
+        AuthService.clearCompanyId();
       }
 
       if (inviteToken) {

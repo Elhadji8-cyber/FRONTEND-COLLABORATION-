@@ -32,9 +32,24 @@ export function AppShell({
     useEffect(() => {
         async function fetchCompany() {
             const session = AuthService.getSession();
-            if (session && session.companyId) {
+            if (session) {
+                let companyId = session.companyId;
+
                 try {
-                    const company = await CompanyService.getById(session.companyId, session.user.id);
+                    if (!companyId) {
+                        const companies = await CompanyService.listByUser(session.user.id);
+                        companyId = companies[0]?.id || "";
+                        if (companyId) {
+                            AuthService.setCompanyId(companyId);
+                        }
+                    }
+
+                    if (!companyId) {
+                        setTitle("No Company");
+                        return;
+                    }
+
+                    const company = await CompanyService.getById(companyId, session.user.id);
                     setTitle(company.companyName);
                     setSubtitle(company.description || "Workspace");
                     setLogoUrl(company.logoUrl);
@@ -43,7 +58,24 @@ export function AppShell({
                     setIsOwner(session.user.id === company.ownerId);
                 } catch (e) {
                     console.error("Failed to load company:", e);
-                    setTitle("Company Error");
+                    try {
+                        const companies = await CompanyService.listByUser(session.user.id);
+                        const fallbackCompany = companies[0];
+                        if (!fallbackCompany) {
+                            AuthService.clearCompanyId();
+                            setTitle("No Company");
+                            return;
+                        }
+
+                        AuthService.setCompanyId(fallbackCompany.id);
+                        setTitle(fallbackCompany.companyName);
+                        setSubtitle(fallbackCompany.description || "Workspace");
+                        setLogoUrl(fallbackCompany.logoUrl);
+                        setIsOwner(session.user.id === fallbackCompany.ownerId);
+                    } catch (fallbackError) {
+                        console.error("Failed to recover company:", fallbackError);
+                        setTitle("Company Error");
+                    }
                 }
             } else {
                 setTitle("No Company");
