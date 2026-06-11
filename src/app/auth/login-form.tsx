@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthService } from "@/services/auth.service";
+import { CompanyService } from "@/services/company.service";
 import { InvitationService } from "@/services/invitation.service";
 
 export function LoginForm() {
@@ -48,6 +49,11 @@ export function LoginForm() {
       // localStorage.setItem("refresh_token", data.refresh_token);
 
       const session = await AuthService.login({ email, password });
+
+      const companies = await CompanyService.listByUser(session.user.id);
+      if (companies.length > 0) {
+        AuthService.setCompanyId(companies[0].id);
+      }
 
       if (inviteToken) {
         const company = await InvitationService.acceptInvitation(inviteToken, session.user.id);

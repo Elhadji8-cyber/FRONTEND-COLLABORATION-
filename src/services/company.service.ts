@@ -40,6 +40,11 @@ export function mapBackendCompany(company: BackendCompany): Company {
 }
 
 export class CompanyService {
+  static async listByUser(userId: string): Promise<Company[]> {
+    const companies = await apiFetch<BackendCompany[]>(`/users/${userId}/companies`);
+    return (companies || []).map(mapBackendCompany);
+  }
+
   static async create(payload: CreateCompanyPayload): Promise<Company> {
     const company = await apiFetch<BackendCompany>("/companies/", {
       method: "POST",
