@@ -28,7 +28,7 @@ export function Sidebar({ active = "projects", title, subtitle, logoUrl, canCrea
             <div className="px-6 py-8">
                 <div className="mb-6 flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-primary-container text-on-primary">
+                        <div className="relative flex h-15 w-25 items-center justify-center overflow-hidden rounded-xl  text-on-primary">
                             {logoUrl ? (
                                 <img
                                     src={logoUrl}
