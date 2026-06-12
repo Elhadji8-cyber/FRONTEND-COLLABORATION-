@@ -167,11 +167,17 @@ export class PywService {
     return (response || []).map(mapBackendFileVersion);
   }
 
-  static async submitVersion(pywId: string, fileUrl: string, message?: string): Promise<void> {
+  static async submitVersion(
+    pywId: string,
+    fileUrl: string,
+    message?: string,
+    storageKey?: string,
+  ): Promise<void> {
     await apiFetch<{ message?: string }>(`/pyw/${pywId}/versions`, {
       method: "POST",
       body: JSON.stringify({
         file_url: fileUrl,
+        storage_key: storageKey || "",
         message,
       }),
     });

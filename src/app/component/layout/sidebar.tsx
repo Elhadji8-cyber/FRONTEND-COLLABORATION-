@@ -16,7 +16,7 @@ type SidebarProps = {
 const items = [
     { key: "company", label: "Company", href: "/company", icon: MdBusiness },
     { key: "projects", label: "Projects", href: "/projects", icon: MdBuild },
-    { key: "pyw", label: "Monoolith", href: "/pyw", icon: MdDashboard },
+    { key: "pyw", label: "PYW", href: "/pyw", icon: MdDashboard },
     { key: "files", label: "Files", href: "/files", icon: MdFolder },
     { key: "messages", label: "Messages", href: "/messages", icon: MdChat },
     { key: "profile", label: "Profile", href: "/profile", icon: MdPerson },

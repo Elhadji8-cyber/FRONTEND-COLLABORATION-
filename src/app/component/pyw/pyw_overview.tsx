@@ -207,7 +207,7 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
                     uploadedBy: session.user.id,
                 });
 
-                const fileUrl = uploadedFile.storageKey;
+                const fileUrl = uploadedFile.downloadUrl || uploadedFile.storageKey;
                 if (!fileUrl) {
                     throw new Error("Impossible de récupérer l'URL du fichier uploadé.");
                 }

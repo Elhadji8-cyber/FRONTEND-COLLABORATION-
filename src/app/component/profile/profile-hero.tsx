@@ -1,4 +1,10 @@
+"use client";
+
+import { motion } from "framer-motion";
 import Image from "next/image";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 
 export type ProfileHeroData = {
     fullName: string;
@@ -26,7 +32,9 @@ export function ProfileHero({
 }: ProfileHeroProps) {
     return (
         <section className="mb-12">
-            <div className="relative overflow-hidden rounded-xl bg-surface-container-low p-8">
+            {/* NOTE: la carte principale reste visuellement identique, mais elle passe par les composants shadcn pour un rendu plus professionnel. */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="relative overflow-hidden rounded-xl bg-surface-container-low p-8">
                 <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center">
                     <div className="relative">
                         <div className="relative h-32 w-32 overflow-hidden rounded-xl bg-surface-container-highest shadow-xl">
@@ -54,38 +62,24 @@ export function ProfileHero({
                         </h1>
 
                         <div className="flex flex-wrap items-center justify-center gap-3 text-on-surface-variant md:justify-start">
-                            <span className="rounded bg-surface-container-highest px-3 py-1 text-sm text-primary">
-                                {profile.title}
-                            </span>
+                            <Badge variant="primary">{profile.title}</Badge>
                             <span className="text-outline-variant">•</span>
                             <span className="text-sm">{profile.company}</span>
                         </div>
 
                         <div className="mt-6 flex flex-wrap justify-center gap-4 md:justify-start">
-                            <button
-                                type="button"
-                                onClick={onEditClick}
-                                className="rounded-lg bg-primary px-6 py-2 text-sm font-bold text-white shadow-md transition active:scale-95"
-                            >
+                            <Button onClick={onEditClick} className="rounded-lg px-6 py-2 text-sm font-bold">
                                 Edit Profile
-                            </button>
+                            </Button>
 
                             {isOwnProfile ? (
-                                <button
-                                    type="button"
-                                    onClick={onViewMessagesClick}
-                                    className="rounded-lg bg-surface-container-highest px-6 py-2 text-sm font-bold text-on-secondary-container transition active:scale-95"
-                                >
+                                <Button variant="secondary" onClick={onViewMessagesClick} className="rounded-lg px-6 py-2 text-sm font-bold">
                                     View Messages
-                                </button>
+                                </Button>
                             ) : (
-                                <button
-                                    type="button"
-                                    onClick={onSendMessageClick}
-                                    className="rounded-lg bg-surface-container-highest px-6 py-2 text-sm font-bold text-on-secondary-container transition active:scale-95"
-                                >
+                                <Button variant="secondary" onClick={onSendMessageClick} className="rounded-lg px-6 py-2 text-sm font-bold">
                                     Send Message
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </div>
@@ -109,7 +103,8 @@ export function ProfileHero({
           Pour la mise à jour :
           PUT /api/v1/users/:id
         */}
-            </div>
+            </Card>
+            </motion.div>
         </section>
     );
 }

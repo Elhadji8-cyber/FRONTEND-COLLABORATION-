@@ -1,6 +1,10 @@
+"use client";
+
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { CiSaveDown1 } from "react-icons/ci";
 import { IoCloudUploadOutline, IoFilter } from "react-icons/io5";
+import { Button } from "../ui/button";
 
 export type FileRow = {
     id: string;
@@ -31,7 +35,7 @@ export function FilesTable({
     onDownload,
 }: FilesTableProps) {
     return (
-        <section className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(19,27,46,0.04)]">
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0px_12px_32px_rgba(19,27,46,0.04)]">
             <div className="flex flex-col gap-4 border-b border-outline-variant/10 p-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h3 className="text-lg font-bold tracking-tight text-on-surface">{title}</h3>
@@ -41,23 +45,16 @@ export function FilesTable({
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                    <button
-                        type="button"
-                        onClick={onFilterClick}
-                        className="flex items-center gap-2 rounded-lg bg-surface-container px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-high"
-                    >
+                    {/* NOTE: les boutons shadcn conservent le style actuel tout en offrant une meilleure cohérence d’interface. */}
+                    <Button variant="secondary" onClick={onFilterClick} className="rounded-xl">
                         <IoFilter className="text-lg" />
                         Filter
-                    </button>
+                    </Button>
 
-                    <button
-                        type="button"
-                        onClick={onUploadClick}
-                        className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
-                    >
+                    <Button onClick={onUploadClick} className="rounded-xl">
                         <IoCloudUploadOutline className="text-lg" />
                         Upload
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -177,6 +174,6 @@ export function FilesTable({
           uploadedAt: formatDate(file.created_at),
         }
       */}
-        </section>
+        </motion.section>
     );
 }

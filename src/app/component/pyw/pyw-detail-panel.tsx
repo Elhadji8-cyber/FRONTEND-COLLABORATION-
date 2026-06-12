@@ -21,7 +21,11 @@ const statusLabels: Record<PywCardData["status"], string> = {
 };
 
 export function PywDetailPanel({ card, versions, isLoadingVersions = false, onClose }: PywDetailPanelProps) {
-    const handleDownloadFile = useCallback(async (fileUrl: string, fileName: string) => {
+    const handleDownloadFile = useCallback(async (
+        storageKey: string | undefined,
+        fileUrl: string | undefined,
+        fileName: string,
+    ) => {
         const session = AuthService.getSession();
         if (!session?.companyId || !session.accessToken) {
             console.error("Aucune session valide pour le téléchargement.");
@@ -29,7 +33,8 @@ export function PywDetailPanel({ card, versions, isLoadingVersions = false, onCl
         }
 
         try {
-            const blob = await FileService.downloadFileByStorageKey(
+            const blob = await FileService.downloadFileByReference(
+                storageKey,
                 fileUrl,
                 fileName,
                 session.companyId,
@@ -119,13 +124,19 @@ export function PywDetailPanel({ card, versions, isLoadingVersions = false, onCl
                                     {version.message ? (
                                         <p className="mt-1 text-on-surface-variant">{version.message}</p>
                                     ) : null}
-                                    {version.fileUrl ? (
+                                    {version.fileUrl || version.storageKey ? (
                                         <button
                                             type="button"
-                                            onClick={() => handleDownloadFile(version.fileUrl, version.fileUrl.split("/").pop() || "fichier")}
+                                            onClick={() =>
+                                                handleDownloadFile(
+                                                    version.storageKey,
+                                                    version.fileUrl,
+                                                    version.versionName || "fichier",
+                                                )
+                                            }
                                             className="mt-2 inline-block text-primary underline"
                                         >
-                                            Ouvrir le fichier
+                                            Télécharger
                                         </button>
                                     ) : null}
                                 </li>

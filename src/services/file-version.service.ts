@@ -177,6 +177,6 @@ export class FileVersionService {
    * Détecte si un fichier est téléchargeable
    */
   static canDownload(version: FileVersion): boolean {
-    return !!version.fileUrl && !!version.storageKey && !version.isDeleted;
+    return !version.isDeleted && Boolean(version.fileUrl || version.storageKey);
   }
 }

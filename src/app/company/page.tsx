@@ -134,7 +134,7 @@ export default function CompanyPage() {
                 inviteRole
             );
             setInviteEmail("");
-            setInviteMessage(`Invitation envoyée. Lien de test local: ${result.invite_link}`);
+            setInviteMessage(`Invitation envoyée. Lien d'invitation : ${result.invite_link}`);
         } catch (err) {
             setInviteMessage(err instanceof Error ? err.message : "Invitation impossible.");
         } finally {

@@ -1,3 +1,9 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+
 // src/components/project/project-overview.tsx
 export type ProjectOverviewStat = {
     label: string;
@@ -37,18 +43,23 @@ export function ProjectOverview({
 
     return (
         <section className="space-y-6">
-            <div className="rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
-                <h2 className="mb-3 text-xl font-bold tracking-tight text-on-surface">
-                    {title}
-                </h2>
-
-                <p className="leading-relaxed text-on-surface-variant">{summary}</p>
-            </div>
+            {/* NOTE: on conserve le même contenu, mais le wrapper shadcn rend la section plus propre sans changer l’architecture visuelle. */}
+            <Card className="rounded-2xl p-6 shadow-sm">
+                <CardHeader className="p-0">
+                    <CardTitle>{title}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 pt-2">
+                    <p className="leading-relaxed text-on-surface-variant">{summary}</p>
+                </CardContent>
+            </Card>
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {stats.map((stat, index) => (
-                    <article
+                    <motion.article
                         key={`${stat.label}-${index}`}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ y: -4 }}
                         className={`rounded-xl border-l-4 bg-surface-container-lowest p-5 shadow-sm ${getAccentClass(
                             stat.accent,
                         )}`}
@@ -57,37 +68,38 @@ export function ProjectOverview({
                             {stat.label}
                         </p>
                         <p className="text-2xl font-black text-on-surface">{stat.value}</p>
-                    </article>
+                    </motion.article>
                 ))}
             </div>
 
-            <div className="rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
-                <h3 className="mb-5 text-lg font-bold tracking-tight text-on-surface">
-                    Key Milestones
-                </h3>
+            <Card className="rounded-2xl p-6 shadow-sm">
+                <CardHeader className="p-0 pb-4">
+                    <CardTitle>Key Milestones</CardTitle>
+                </CardHeader>
 
                 <div className="space-y-4">
                     {milestones.map((milestone) => (
-                        <div
+                        <motion.div
                             key={milestone.id}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ y: -2 }}
                             className="rounded-xl border border-outline-variant/20 bg-surface-container-low p-4"
                         >
                             <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <p className="font-semibold text-on-surface">
                                     {milestone.title}
                                 </p>
-                                <span className="text-xs font-medium text-on-surface-variant">
-                                    {milestone.dateLabel}
-                                </span>
+                                <Badge variant="secondary">{milestone.dateLabel}</Badge>
                             </div>
 
                             <p className="text-sm leading-relaxed text-on-surface-variant">
                                 {milestone.description}
                             </p>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
-            </div>
+            </Card>
 
             {/* TODO: brancher ici ton backend Go
           Exemple de sources backend :

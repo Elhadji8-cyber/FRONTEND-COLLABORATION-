@@ -1,6 +1,10 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { FaFolderOpen } from "react-icons/fa";
 import { FiMessageSquare } from "react-icons/fi";
 import { MdDeleteOutline, MdPersonOutline } from "react-icons/md";
+import { Card } from "../ui/card";
 
 type ProjectMemberAvatar = {
     id: string;
@@ -63,7 +67,9 @@ export function ProjectCard({
     const displayedMembers = members ?? [];
 
     return (
-        <article className="group flex flex-col overflow-hidden rounded-[2rem] border border-outline-variant/10 bg-surface-container-lowest shadow-sm transition-all hover:shadow-md h-full">
+        // NOTE: la carte de projet garde son design actuel, mais bénéficie désormais d’une animation douce et d’un conteneur shadcn plus propre.
+        <motion.article initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4 }}>
+            <Card className="group flex h-full flex-col overflow-hidden rounded-[2rem] border border-outline-variant/10 bg-surface-container-lowest shadow-sm transition-all hover:shadow-md">
             <div className="relative overflow-hidden bg-surface-container-high px-6 py-5">
                 <div className={`absolute left-0 top-0 h-full w-2 ${accentClasses.bar}`} />
 
@@ -156,6 +162,7 @@ export function ProjectCard({
         title -> projet.name
         progress -> projet.progress_percent
       */}
-        </article>
+            </Card>
+        </motion.article>
     );
 }

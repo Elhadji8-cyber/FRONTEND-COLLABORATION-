@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useCallback } from "react";
 import type { FileVersion } from "@/types/pyw";
 import { AuthService } from "@/services/auth.service";
@@ -69,7 +70,11 @@ export function PywCard({
     onOpen,
     onSendDirectMessage,
 }: PywCardProps) {
-    const handleDownloadFile = useCallback(async (fileUrl: string, fileName: string) => {
+    const handleDownloadFile = useCallback(async (
+        storageKey: string | undefined,
+        fileUrl: string | undefined,
+        fileName: string,
+    ) => {
         const session = AuthService.getSession();
         if (!session?.companyId || !session.accessToken) {
             console.error("Aucune session valide pour le téléchargement.");
@@ -77,7 +82,8 @@ export function PywCard({
         }
 
         try {
-            const blob = await FileService.downloadFileByStorageKey(
+            const blob = await FileService.downloadFileByReference(
+                storageKey,
                 fileUrl,
                 fileName,
                 session.companyId,
@@ -98,7 +104,8 @@ export function PywCard({
     }, []);
 
     return (
-        <article
+        // NOTE: Framer Motion ajoute ici une animation de survol légère pour les cartes PYW sans modifier leur logique métier.
+        <motion.article
             className={cn(
                 "group flex min-h-[320px] flex-col overflow-hidden rounded-[2rem] border p-7 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[340px] sm:p-8",
                 card.status === "approved"
@@ -285,10 +292,18 @@ export function PywCard({
                                                     {file.message || file.fileUrl}
                                                 </p>
                                             </div>
-                                            {file.fileUrl ? (
+                                            {file.fileUrl || file.storageKey ? (
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDownloadFile(file.fileUrl, file.versionNumber ? `Version-${file.versionNumber}.pdf` : `fichier`)}
+                                                    onClick={() =>
+                                                        handleDownloadFile(
+                                                            file.storageKey,
+                                                            file.fileUrl,
+                                                            file.versionNumber
+                                                                ? `Version-${file.versionNumber}.pdf`
+                                                                : `fichier`,
+                                                        )
+                                                    }
                                                     className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110"
                                                 >
                                                     Télécharger
@@ -317,6 +332,6 @@ export function PywCard({
             >
                 Ouvrir
             </button>
-        </article>
+        </motion.article>
     );
 }

@@ -102,12 +102,17 @@ export default function PywDetailPage() {
                     uploadedBy: session.user.id,
                 });
 
-                const fileUrl = uploadedFile.storageKey;
+                const fileUrl = uploadedFile.downloadUrl || uploadedFile.storageKey;
                 if (!fileUrl) {
                     throw new Error("Impossible de récupérer l'URL du fichier uploadé.");
                 }
 
-                await PywService.submitVersion(pywId, fileUrl, `Upload: ${uploadedFile.fileName}`);
+                await PywService.submitVersion(
+                    pywId,
+                    fileUrl,
+                    `Upload: ${uploadedFile.fileName}`,
+                    uploadedFile.storageKey,
+                );
             }
 
             // Recharger les données du pyw
@@ -125,15 +130,16 @@ export default function PywDetailPage() {
         }
     };
 
-    const handleDownloadFile = async (storageKey: string, fileName: string) => {
+    const handleDownloadFile = async (storageKey: string, fileName: string, fileUrl?: string) => {
         if (!session?.companyId || !session.accessToken) {
             setError("Session utilisateur introuvable pour le téléchargement.");
             return;
         }
 
         try {
-            const blob = await FileService.downloadFileByStorageKey(
+            const blob = await FileService.downloadFileByReference(
                 storageKey,
+                undefined,
                 fileName,
                 session.companyId,
                 session.accessToken,
@@ -148,7 +154,8 @@ export default function PywDetailPage() {
             anchor.remove();
             URL.revokeObjectURL(objectUrl);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur lors du téléchargement du fichier.");
+            const message = err instanceof Error ? err.message : String(err);
+            setError(message || "Erreur lors du téléchargement du fichier.");
         }
     };
 
@@ -198,11 +205,12 @@ export default function PywDetailPage() {
         }
 
         try {
-            const blob = await FileService.downloadFileByStorageKey(
+            const blob = await FileService.downloadFileByReference(
                 version.storageKey,
-                version.versionName,
+                version.fileUrl,
+                `${version.versionName || 'fichier'}${version.fileType ? `.${version.fileType}` : ''}`,
                 session.companyId,
-                session.accessToken
+                session.accessToken,
             );
 
             const objectUrl = URL.createObjectURL(blob);
@@ -214,7 +222,8 @@ export default function PywDetailPage() {
             anchor.remove();
             URL.revokeObjectURL(objectUrl);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur lors du téléchargement du fichier.");
+            const message = err instanceof Error ? err.message : String(err);
+            setError(message || "Erreur lors du téléchargement du fichier.");
         }
     };
 

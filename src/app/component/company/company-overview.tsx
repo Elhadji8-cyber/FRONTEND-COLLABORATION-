@@ -1,7 +1,12 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { GrStorage } from "react-icons/gr";
 import { MdOutlineGroups, MdOutlineHub } from "react-icons/md";
 import { FaRegFolder } from "react-icons/fa";
 import { CiEdit } from "react-icons/ci";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 
 export type WorkspaceMember = {
     id: string;
@@ -121,14 +126,11 @@ export function CompanyOverview({
 
                 <div className="flex flex-wrap gap-3">
                     {onEditClick ? (
-                        <button
-                            type="button"
-                            onClick={onEditClick}
-                            className="inline-flex items-center gap-2 rounded-full bg-surface-container-highest px-6 py-2.5 text-sm font-semibold text-on-secondary-container transition hover:brightness-95"
-                        >
+                        // NOTE: on garde la structure existante, mais on passe par un bouton shadcn pour un rendu plus propre.
+                        <Button variant="secondary" onClick={onEditClick} className="rounded-full px-6 py-2.5">
                             <CiEdit className="text-base" aria-hidden />
                             Modifier
-                        </button>
+                        </Button>
                     ) : null}
                 </div>
             </div>
@@ -136,7 +138,8 @@ export function CompanyOverview({
             {/* Cartes de statistiques */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {/* Total Members */}
-                <div className="rounded-[2rem] bg-gradient-to-br from-primary-container/20 to-primary-container/5 p-6 border border-primary-container/30">
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4 }}>
+                    <Card className="rounded-[2rem] bg-gradient-to-br from-primary-container/20 to-primary-container/5 p-6 border border-primary-container/30">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-on-surface-variant">
@@ -150,10 +153,12 @@ export function CompanyOverview({
                             <MdOutlineGroups className="text-2xl" aria-hidden />
                         </div>
                     </div>
-                </div>
+                    </Card>
+                </motion.div>
 
                 {/* Active Projects */}
-                <div className="rounded-[2rem] bg-gradient-to-br from-secondary-container/20 to-secondary-container/5 p-6 border border-secondary-container/30">
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4 }}>
+                    <Card className="rounded-[2rem] bg-gradient-to-br from-secondary-container/20 to-secondary-container/5 p-6 border border-secondary-container/30">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-on-surface-variant">
@@ -167,10 +172,12 @@ export function CompanyOverview({
                             <FaRegFolder className="text-2xl" aria-hidden />
                         </div>
                     </div>
-                </div>
+                    </Card>
+                </motion.div>
 
                 {/* Active Modules */}
-                <div className="rounded-[2rem] bg-gradient-to-br from-tertiary-container/20 to-tertiary-container/5 p-6 border border-tertiary-container/30">
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4 }}>
+                    <Card className="rounded-[2rem] bg-gradient-to-br from-tertiary-container/20 to-tertiary-container/5 p-6 border border-tertiary-container/30">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-on-surface-variant">
@@ -184,10 +191,12 @@ export function CompanyOverview({
                             <MdOutlineHub className="text-2xl" aria-hidden />
                         </div>
                     </div>
-                </div>
+                    </Card>
+                </motion.div>
 
                 {/* Storage Usage */}
-                <div className="rounded-[2rem] bg-gradient-to-br from-error-container/20 to-error-container/5 p-6 border border-error-container/30">
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4 }}>
+                    <Card className="rounded-[2rem] bg-gradient-to-br from-error-container/20 to-error-container/5 p-6 border border-error-container/30">
                     <div className="flex items-start justify-between">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-on-surface-variant">
@@ -204,7 +213,8 @@ export function CompanyOverview({
                             <GrStorage className="text-2xl" aria-hidden />
                         </div>
                     </div>
-                </div>
+                    </Card>
+                </motion.div>
             </div>
 
             {/* Storage Visualization */}
