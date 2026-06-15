@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { FiCheck, FiCopy } from "react-icons/fi";
 import { AppShell } from "../component/layout/app-shell";
 import { CompanyOverview } from "../component/company/company-overview";
 import { MembersTable, type CompanyMemberRow } from "../component/company/members-table";
@@ -22,7 +23,9 @@ export default function CompanyPage() {
     const [inviteEmail, setInviteEmail] = useState("");
     const [inviteRole, setInviteRole] = useState("MEMBER");
     const [inviteMessage, setInviteMessage] = useState("");
+    const [inviteLink, setInviteLink] = useState("");
     const [isInviting, setIsInviting] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [companyNameEdit, setCompanyNameEdit] = useState("");
     const [descriptionEdit, setDescriptionEdit] = useState("");
@@ -134,11 +137,24 @@ export default function CompanyPage() {
                 inviteRole
             );
             setInviteEmail("");
-            setInviteMessage(`Invitation envoyée. Lien d'invitation : ${result.invite_link}`);
+            setInviteLink(result.invite_link || "");
+            setInviteMessage("Invitation envoyée avec succès.");
         } catch (err) {
             setInviteMessage(err instanceof Error ? err.message : "Invitation impossible.");
         } finally {
             setIsInviting(false);
+        }
+    }
+
+    async function handleCopyInviteLink() {
+        if (!inviteLink) return;
+
+        try {
+            await navigator.clipboard.writeText(inviteLink);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 1500);
+        } catch {
+            setInviteMessage("Impossible de copier le lien automatiquement.");
         }
     }
 
@@ -372,6 +388,25 @@ export default function CompanyPage() {
                         <p className="mt-3 break-words text-sm text-on-surface-variant">
                             {inviteMessage}
                         </p>
+                    ) : null}
+
+                    {inviteLink ? (
+                        <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold text-on-surface">Lien d&apos;invitation généré</p>
+                                    <p className="mt-1 break-all text-sm text-on-surface-variant">{inviteLink}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCopyInviteLink}
+                                    aria-label="Copier le lien d’invitation"
+                                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-surface-container-lowest text-primary transition hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                >
+                                    {isCopied ? <FiCheck className="h-5 w-5" /> : <FiCopy className="h-5 w-5" />}
+                                </button>
+                            </div>
+                        </div>
                     ) : null}
                 </section>
 
