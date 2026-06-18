@@ -131,7 +131,7 @@ export function PywDetailPanel({ card, versions, isLoadingVersions = false, onCl
                                                 handleDownloadFile(
                                                     version.storageKey,
                                                     version.fileUrl,
-                                                    version.versionName || "fichier",
+                                                    version.fileName || `${version.versionName || "fichier"}${version.fileType ? `.${version.fileType.split("/").pop()}` : ""}`,
                                                 )
                                             }
                                             className="mt-2 inline-block text-primary underline"

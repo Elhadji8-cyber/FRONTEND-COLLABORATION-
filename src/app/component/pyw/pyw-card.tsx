@@ -299,9 +299,7 @@ export function PywCard({
                                                         handleDownloadFile(
                                                             file.storageKey,
                                                             file.fileUrl,
-                                                            file.versionNumber
-                                                                ? `Version-${file.versionNumber}.pdf`
-                                                                : `fichier`,
+                                                            file.fileName || `Version-${file.versionNumber}${file.fileType ? `.${file.fileType.split("/").pop()}` : ""}`,
                                                         )
                                                     }
                                                     className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110"

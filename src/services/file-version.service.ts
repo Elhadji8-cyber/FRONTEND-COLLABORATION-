@@ -13,6 +13,7 @@ export function mapBackendFileVersion(version: BackendFileVersion): FileVersion 
     versionName: version.version_name,
     companyId: version.company_id,
     changeNote: version.change_note || version.message || "",
+    fileName: version.file_name || undefined,
     fileType: version.file_type,
     fileSize: version.file_size,
     fileUrl: version.file_url,

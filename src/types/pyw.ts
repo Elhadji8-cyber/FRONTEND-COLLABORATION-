@@ -55,6 +55,7 @@ export interface BackendFileVersion {
   version_name: string;
   company_id: string;
   change_note?: string;
+  file_name?: string;
   file_type: string;
   file_size: number;
   file_url: string;
@@ -75,6 +76,7 @@ export interface FileVersion {
   versionName: string;
   companyId: string;
   changeNote: string;
+  fileName?: string;
   fileType: string;
   fileSize: number;
   fileUrl: string;

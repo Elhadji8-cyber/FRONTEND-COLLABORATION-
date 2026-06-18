@@ -128,7 +128,7 @@ export default function PywDetailPage() {
         try {
             const blob = await FileService.downloadFileByReference(
                 storageKey,
-                undefined,
+                fileUrl,
                 fileName,
                 session.companyId,
                 session.accessToken,
@@ -194,10 +194,13 @@ export default function PywDetailPage() {
         }
 
         try {
+            // Préférer le nom de fichier d'origine stocké en base.
+            // Ceci évite de reconstruire un nom générique comme v1.dwg.
+            const downloadFileName = version.fileName || `${version.versionName || 'fichier'}${version.fileType ? `.${version.fileType.split('/').pop()}` : ''}`;
             const blob = await FileService.downloadFileByReference(
                 version.storageKey,
                 version.fileUrl,
-                `${version.versionName || 'fichier'}${version.fileType ? `.${version.fileType}` : ''}`,
+                downloadFileName,
                 session.companyId,
                 session.accessToken,
             );
@@ -205,7 +208,7 @@ export default function PywDetailPage() {
             const objectUrl = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = objectUrl;
-            anchor.download = `${version.versionName}.${version.fileType}`;
+            anchor.download = downloadFileName;
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
