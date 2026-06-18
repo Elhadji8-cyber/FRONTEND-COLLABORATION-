@@ -182,4 +182,27 @@ export class PywService {
       }),
     });
   }
+
+  static async submitVersionWithFile(
+    pywId: string,
+    file: File,
+    message?: string,
+    storageKey?: string,
+    token?: string,
+  ): Promise<void> {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (message) {
+      formData.append("message", message);
+    }
+    if (storageKey) {
+      formData.append("storage_key", storageKey);
+    }
+
+    await apiFetch<{ message?: string }>(`/pyw/${pywId}/versions`, {
+      method: "POST",
+      token,
+      body: formData,
+    });
+  }
 }

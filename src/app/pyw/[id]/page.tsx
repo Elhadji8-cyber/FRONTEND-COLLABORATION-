@@ -95,23 +95,12 @@ export default function PywDetailPage() {
             }
 
             for (let i = 0; i < files.length; i++) {
-                const uploadedFile = await FileService.upload({
-                    file: files[i],
-                    projectId: pyw.project_id,
-                    companyId: session.companyId,
-                    uploadedBy: session.user.id,
-                });
-
-                const fileUrl = uploadedFile.downloadUrl || uploadedFile.storageKey;
-                if (!fileUrl) {
-                    throw new Error("Impossible de récupérer l'URL du fichier uploadé.");
-                }
-
-                await PywService.submitVersion(
+                await PywService.submitVersionWithFile(
                     pywId,
-                    fileUrl,
-                    `Upload: ${uploadedFile.fileName}`,
-                    uploadedFile.storageKey,
+                    files[i],
+                    `Upload: ${files[i].name}`,
+                    undefined,
+                    session?.accessToken,
                 );
             }
 
