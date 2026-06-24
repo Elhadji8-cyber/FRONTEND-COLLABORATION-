@@ -205,4 +205,11 @@ export class PywService {
       body: formData,
     });
   }
+
+  static async delete(pywId: string, token?: string): Promise<void> {
+    await apiFetch<void>(`/pyw/${pywId}`, {
+      method: "DELETE",
+      token,
+    });
+  }
 }

@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { TableWrapper, Table, TableHead, TableBody } from "../ui/table";
 import { Button } from "../ui/button";
+import { MdMoreVert } from "react-icons/md";
 
 export type CompanyMemberRow = {
   id: string;
@@ -159,32 +160,28 @@ export function MembersTable({
                 </td>
                 <td className="px-8 py-5 text-right">
                   {isOwner && member.role.toUpperCase() !== "OWNER" ? (
-                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:justify-end">
-                      {member.role.toUpperCase() === "ADMIN" ? (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => onUpdateMemberRole?.(member.id, "MEMBER")}
+                    <details className="relative inline-block text-left">
+                      <summary className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface-container text-on-surface transition hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary">
+                        <MdMoreVert className="h-5 w-5" aria-hidden />
+                        <span className="sr-only">Ouvrir le menu des actions</span>
+                      </summary>
+                      <div className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-3xl border border-outline-variant/70 bg-surface shadow-lg">
+                        <button
+                          type="button"
+                          onClick={() => onUpdateMemberRole?.(member.id, member.role.toUpperCase() === "ADMIN" ? "MEMBER" : "ADMIN")}
+                          className="w-full px-4 py-3 text-left text-sm font-medium text-on-surface transition hover:bg-surface-container-high"
                         >
-                          Demote
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => onUpdateMemberRole?.(member.id, "ADMIN")}
+                          {member.role.toUpperCase() === "ADMIN" ? "Retrograder" : "Promouvoir admin"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onRemoveMember?.(member.id)}
+                          className="w-full px-4 py-3 text-left text-sm font-medium text-error transition hover:bg-error/10"
                         >
-                          Promote
-                        </Button>
-                      )}
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => onRemoveMember?.(member.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
+                          Supprimer
+                        </button>
+                      </div>
+                    </details>
                   ) : (
                     <span className="text-xs text-on-surface-variant">-</span>
                   )}

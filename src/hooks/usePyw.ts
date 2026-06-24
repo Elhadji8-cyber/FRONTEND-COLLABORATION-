@@ -111,3 +111,23 @@ export const useSubmitPywVersion = (pywId: string) => {
     },
   });
 };
+
+export const usePywDelete = (projectId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pywId: string) => {
+      if (!pywId) {
+        throw new Error("Identifiant PYW manquant.");
+      }
+      const session = AuthService.getSession();
+      return PywService.delete(pywId, session?.accessToken);
+    },
+    onSuccess: (_, pywId) => {
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ["pyw", "project", projectId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["pyw", pywId] });
+    },
+  });
+};

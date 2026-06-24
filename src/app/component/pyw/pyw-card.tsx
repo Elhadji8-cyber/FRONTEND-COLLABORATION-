@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 import { FaRegComment } from "react-icons/fa";
 import { GrValidate } from "react-icons/gr";
 import { VscDiffModified } from "react-icons/vsc";
-import { MdDeleteOutline, MdPersonOutline, MdOutlineAssignmentTurnedIn } from "react-icons/md";
+import { MdDeleteOutline, MdMoreVert, MdPersonOutline, MdOutlineAssignmentTurnedIn } from "react-icons/md";
 
 export type PywStatus = "pending" | "approved" | "rejected" | "modified";
 
@@ -38,11 +38,13 @@ export type PywCardData = {
 type PywCardProps = {
     card: PywCardData;
     isOwner?: boolean;
+    canDelete?: boolean;
     isSubmitting?: boolean;
     isOpen?: boolean;
     versions?: FileVersion[];
     onStatusChange: (id: string, status: Exclude<PywStatus, "pending">) => void;
     onOpen: (card: PywCardData) => void;
+    onDelete?: (id: string) => void;
     onSendDirectMessage?: (card: PywCardData) => void;
     members?: ProjectMemberAvatar[];
 };
@@ -64,11 +66,13 @@ const statusStyles: Record<PywStatus, string> = {
 export function PywCard({
     card,
     isOwner = false,
+    canDelete = false,
     isSubmitting = false,
     isOpen = false,
     versions = [],
     onStatusChange,
     onOpen,
+    onDelete,
     onSendDirectMessage,
 }: PywCardProps) {
     const handleDownloadFile = useCallback(async (
@@ -238,6 +242,32 @@ export function PywCard({
                                 <FaRegComment className="h-5 w-5" aria-hidden />
                                 <span className="sr-only">Message direct au membre</span>
                             </button>
+                            {canDelete && onDelete ? (
+                                <details className="relative">
+                                    <summary
+                                        className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-surface-container text-on-surface transition hover:bg-surface-container-high"
+                                        title="Plus d’actions"
+                                    >
+                                        <MdMoreVert className="h-5 w-5" aria-hidden />
+                                        <span className="sr-only">Ouvrir le menu actions</span>
+                                    </summary>
+                                    <div className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-3xl border border-outline-variant/70 bg-surface shadow-lg">
+                                        <button
+                                            type="button"
+                                            disabled={isSubmitting}
+                                            onClick={() => {
+                                                const confirmed = window.confirm("Voulez-vous vraiment supprimer ce travail ?");
+                                                if (confirmed) {
+                                                    onDelete(card.id);
+                                                }
+                                            }}
+                                            className="w-full px-4 py-3 text-left text-sm font-medium text-error transition hover:bg-error/10 disabled:opacity-50"
+                                        >
+                                            Supprimer le PYW
+                                        </button>
+                                    </div>
+                                </details>
+                            ) : null}
                         </div>
 
                         {/* Members avatars - vertical stack */}

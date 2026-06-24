@@ -9,7 +9,7 @@ import { PywService } from "@/services/pyw.service";
 import { UserService } from "@/services/user.service";
 import { ConversationService } from "@/services/conversation.service";
 import { useProjects } from "@/hooks/useProjects";
-import { usePywList, usePywReview, usePywSubmit } from "@/hooks/usePyw";
+import { usePywList, usePywReview, usePywSubmit, usePywDelete } from "@/hooks/usePyw";
 import { formatPywDate } from "@/services/pyw.service";
 import type { Pyw, FileVersion } from "@/types/pyw";
 import { PywCard, type PywCardData, type PywStatus } from "./pyw-card";
@@ -49,6 +49,7 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
 
     const { data: works = [], isLoading: isLoadingWorks, error: worksError } = usePywList(projectId);
     const reviewMutation = usePywReview(projectId);
+    const deleteMutation = usePywDelete(projectId);
     const submitMutation = usePywSubmit(projectId);
 
     useEffect(() => {
@@ -96,7 +97,7 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
     const modifiedCount = useMemo(() => works.filter((w) => w.status === "modified").length, [works]);
 
     const isLoading = isLoadingWorks;
-    const isSubmitting = submitMutation.status === "pending" || reviewMutation.status === "pending" || isDirectMessageSubmitting;
+    const isSubmitting = submitMutation.status === "pending" || reviewMutation.status === "pending" || deleteMutation.status === "pending" || isDirectMessageSubmitting;
     const queryError = worksError ? (worksError instanceof Error ? worksError.message : String(worksError)) : "";
 
     useEffect(() => {
@@ -133,9 +134,21 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
 
     const router = useRouter();
 
+    const currentUserId = AuthService.getSession()?.user.id;
+
     const handleOpen = async (card: PywCardData) => {
         // Navigate to the dedicated PYW detail page so files and actions are handled there
         router.push(`/pyw/${card.id}`);
+    };
+
+    const handleDelete = async (cardId: string) => {
+        setError("");
+
+        try {
+            await deleteMutation.mutateAsync(cardId);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Impossible de supprimer ce travail.");
+        }
     };
 
     const handleSendDirectMessage = async (card: PywCardData) => {
@@ -305,11 +318,13 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
                             key={card.id}
                             card={card}
                             isOwner={isOwner}
+                            canDelete={isOwner || card.userId === currentUserId}
                             isSubmitting={isSubmitting}
                             isOpen={openedCardId === card.id}
                             versions={openedCardId === card.id ? versions : []}
                             onStatusChange={handleStatusChange}
                             onOpen={handleOpen}
+                            onDelete={handleDelete}
                             onSendDirectMessage={handleSendDirectMessage}
                         />
                     ))}
@@ -326,11 +341,30 @@ export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?:
     const { enrichedProjects, projectsQuery, companyQuery } = useProjects();
     const [projectId, setProjectId] = useState("");
     const [projectName, setProjectName] = useState("");
-    const [isOwner, setIsOwner] = useState(false);
 
     const projects = enrichedProjects || [];
     const isLoading = projectsQuery.isLoading || companyQuery.isLoading;
     const error = projectsQuery.error || companyQuery.error;
+    const currentUserId = AuthService.getSession()?.user.id;
+
+    const selectedProject = useMemo(
+        () => projects.find((project) => project.id === projectId),
+        [projectId, projects],
+    );
+
+    const isOwner = useMemo(() => {
+        if (!currentUserId) return false;
+        if (companyQuery.data?.ownerId === currentUserId) {
+            return true;
+        }
+        return (
+            selectedProject?.members?.some(
+                (member) =>
+                    member.userId === currentUserId &&
+                    ["OWNER", "ADMIN"].includes(member.role?.toUpperCase() ?? ""),
+            ) ?? false
+        );
+    }, [companyQuery.data?.ownerId, currentUserId, selectedProject]);
 
     useEffect(() => {
         if (!projects.length) {
@@ -342,14 +376,6 @@ export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?:
             setProjectName(projects[0].projectName);
         }
     }, [projectId, projects]);
-
-    useEffect(() => {
-        if (!companyQuery.data || !projects.length) {
-            return;
-        }
-
-        setIsOwner(companyQuery.data.ownerId === AuthService.getSession()?.user.id);
-    }, [companyQuery.data, projects.length]);
 
     if (isLoading) {
         return <p className="text-sm text-on-surface-variant">Chargement...</p>;

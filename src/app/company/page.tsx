@@ -325,6 +325,8 @@ export default function CompanyPage() {
         );
     }
 
+    const session = AuthService.getSession();
+
     return (
         <AppShell active="company">
             <div className="mx-auto max-w-7xl space-y-12 px-4 py-8 sm:px-6 lg:px-12">
@@ -466,7 +468,12 @@ export default function CompanyPage() {
                     ) : null}
                 </section>
 
-                <MembersTable members={members} />
+                <MembersTable
+                    members={members}
+                    isOwner={company.ownerId === session.user.id}
+                    onRemoveMember={handleRemoveCompanyMember}
+                    onUpdateMemberRole={handleChangeCompanyMemberRole}
+                />
 
                 <SettingsPanel
                     settings={{
