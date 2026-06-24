@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthService } from "@/services/auth.service";
 import { FileVersionService } from "@/services/file-version.service";
 import { PywService } from "@/services/pyw.service";
-import type { FileVersion, Pyw, PywDetailResponse, PywStatus } from "@/types/pyw";
+import type { FileVersion, Pyw, PywStatus } from "@/types/pyw";
+import type { PywDetailResponse } from "@/services/pyw.service";
 
 const DEFAULT_STALE_TIME = 1000 * 60;
 

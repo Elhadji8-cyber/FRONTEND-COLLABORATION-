@@ -170,16 +170,13 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
             const directConversationId = directConversation
                 ? directConversation.id
                 : (
-                    await ConversationService.create({
-                        name: "",
-                        type: "DIRECT",
-                        companyId: session.companyId,
+                    await ConversationService.createOrGetDirectMessage(
+                        card.userId,
+                        session.user.id,
+                        session.companyId,
                         projectId,
-                        creatorId: session.user.id,
-                        creatorCompanyId: session.companyId,
-                        members: [session.user.id, card.userId],
-                        token: session.accessToken,
-                    })
+                        session.accessToken,
+                    )
                 ).id;
 
             router.push(`/projects/${projectId}/messages?conversation_id=${directConversationId}`);
