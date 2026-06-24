@@ -339,9 +339,14 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
 }
 
 export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?: string }) {
+    const [isMounted, setIsMounted] = useState(false);
     const { enrichedProjects, projectsQuery, companyQuery } = useProjects();
     const [projectId, setProjectId] = useState("");
     const [projectName, setProjectName] = useState("");
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const projects = enrichedProjects || [];
     const isLoading = projectsQuery.isLoading || companyQuery.isLoading;
@@ -377,6 +382,10 @@ export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?:
             setProjectName(projects[0].projectName);
         }
     }, [projectId, projects]);
+
+    if (!isMounted) {
+        return <p className="text-sm text-on-surface-variant">Chargement...</p>;
+    }
 
     if (isLoading) {
         return <p className="text-sm text-on-surface-variant">Chargement...</p>;
