@@ -47,7 +47,8 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
     const [showSubmitModal, setShowSubmitModal] = useState(false);
     const [isDirectMessageSubmitting, setIsDirectMessageSubmitting] = useState(false);
 
-    const { data: works = [], isLoading: isLoadingWorks, error: worksError } = usePywList(projectId);
+    const { data, isLoading: isLoadingWorks, error: worksError } = usePywList(projectId);
+    const works = useMemo(() => data ?? [], [data]);
     const reviewMutation = usePywReview(projectId);
     const deleteMutation = usePywDelete(projectId);
     const submitMutation = usePywSubmit(projectId);

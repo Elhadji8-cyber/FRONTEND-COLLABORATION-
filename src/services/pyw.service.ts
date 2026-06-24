@@ -1,4 +1,5 @@
 ﻿import { apiFetch } from "@/lib/api";
+import { AuthService } from "@/services/auth.service";
 import type {
   BackendFileVersion,
   BackendPyw,
@@ -101,7 +102,9 @@ export function formatPywDate(iso?: string) {
 
 export class PywService {
   static async listByProject(projectId: string): Promise<Pyw[]> {
-    const works = await apiFetch<BackendPyw[]>(`/projects/${projectId}/pyw`);
+    const works = await apiFetch<BackendPyw[]>(`/projects/${projectId}/pyw`, {
+      token: AuthService.getAccessToken(),
+    });
     return (works || []).map((work, index) => mapBackendPyw(work, index));
   }
 
