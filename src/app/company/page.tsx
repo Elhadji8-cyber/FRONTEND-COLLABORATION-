@@ -326,6 +326,7 @@ export default function CompanyPage() {
     }
 
     const session = AuthService.getSession();
+    const isOwner = session?.user?.id ? company.ownerId === session.user.id : false;
 
     return (
         <AppShell active="company">
@@ -470,7 +471,7 @@ export default function CompanyPage() {
 
                 <MembersTable
                     members={members}
-                    isOwner={company.ownerId === session.user.id}
+                    isOwner={isOwner}
                     onRemoveMember={handleRemoveCompanyMember}
                     onUpdateMemberRole={handleChangeCompanyMemberRole}
                 />
