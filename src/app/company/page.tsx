@@ -20,6 +20,8 @@ export default function CompanyPage() {
     const [activeModulesCount, setActiveModulesCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
+    const [actionMessage, setActionMessage] = useState("");
+    const [isMemberActionLoading, setIsMemberActionLoading] = useState(false);
     const [inviteEmail, setInviteEmail] = useState("");
     const [inviteRole, setInviteRole] = useState("MEMBER");
     const [inviteMessage, setInviteMessage] = useState("");
@@ -34,85 +36,89 @@ export default function CompanyPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState("");
 
-    useEffect(() => {
-        async function loadCompanyData() {
-            const session = AuthService.getSession();
-            if (!session || !session.companyId) {
-                setError("Aucune entreprise trouvée.");
-                setIsLoading(false);
-                return;
-            }
+    async function loadCompanyData() {
+        const session = AuthService.getSession();
+        if (!session || !session.companyId) {
+            setError("Aucune entreprise trouvée.");
+            setIsLoading(false);
+            return;
+        }
 
-            try {
-                const companyData = await CompanyService.getById(session.companyId, session.user.id);
-                setCompany(companyData);
-                setCompanyNameEdit(companyData.companyName);
-                setDescriptionEdit(companyData.description || "");
-                setLogoUrlEdit(companyData.logoUrl || "");
-                setLogoPreviewEdit(companyData.logoUrl || "");
+        try {
+            setError("");
+            setActionMessage("");
+            const companyData = await CompanyService.getById(session.companyId, session.user.id);
+            setCompany(companyData);
+            setCompanyNameEdit(companyData.companyName);
+            setDescriptionEdit(companyData.description || "");
+            setLogoUrlEdit(companyData.logoUrl || "");
+            setLogoPreviewEdit(companyData.logoUrl || "");
 
-                // Charger les détails des membres
-                if (companyData.members && companyData.members.length > 0) {
-                    const memberDetails = await Promise.all(
-                        companyData.members.map(async (m) => {
-                            try {
-                                const user = await UserService.getById(m.userId);
-                                return {
-                                    id: m.userId,
-                                    fullName: user.name || "Utilisateur inconnu",
-                                    email: user.email || "",
-                                    role: m.role || "Membre",
-                                    status: m.isActive ? "Actif" : "Inactif",
-                                    activityLabel: new Date(m.addedAt || "").toLocaleDateString(),
-                                    name: user.name || "Utilisateur inconnu",
-                                    avatarUrl: user.avatarUrl,
-                                };
-                            } catch {
-                                return {
-                                    id: m.userId,
-                                    fullName: "Utilisateur introuvable",
-                                    email: "",
-                                    role: m.role || "Membre",
-                                    status: "Inconnu",
-                                    activityLabel: "",
-                                    name: "Utilisateur introuvable",
-                                    avatarUrl: undefined,
-                                };
-                            }
-                        })
-                    );
-                    setMembers(memberDetails);
-                }
-
-                // Charger les projets et le nombre de PYW associés à l'entreprise
-                const companyProjects = await ProjectService.listByCompany(
-                    session.companyId,
-                    session.user.id,
-                    session.companyId
-                );
-                const projectPywCounts = await Promise.all(
-                    companyProjects.map(async (project) => {
+            // Charger les détails des membres
+            if (companyData.members && companyData.members.length > 0) {
+                const memberDetails = await Promise.all(
+                    companyData.members.map(async (m) => {
                         try {
-                            const pyws = await PywService.listByProject(project.id);
-                            return pyws.length;
+                            const user = await UserService.getById(m.userId);
+                            return {
+                                id: m.userId,
+                                fullName: user.name || "Utilisateur inconnu",
+                                email: user.email || "",
+                                role: m.role || "Membre",
+                                status: m.isActive ? "Actif" : "Inactif",
+                                activityLabel: new Date(m.addedAt || "").toLocaleDateString(),
+                                name: user.name || "Utilisateur inconnu",
+                                avatarUrl: user.avatarUrl,
+                            };
                         } catch {
-                            return 0;
+                            return {
+                                id: m.userId,
+                                fullName: "Utilisateur introuvable",
+                                email: "",
+                                role: m.role || "Membre",
+                                status: "Inconnu",
+                                activityLabel: "",
+                                name: "Utilisateur introuvable",
+                                avatarUrl: undefined,
+                            };
                         }
                     })
                 );
-
-                const projectsCount = companyProjects.length;
-                const activeModulesCount = projectPywCounts.reduce((sum, count) => sum + count, 0);
-
-                setProjectsCount(projectsCount);
-                setActiveModulesCount(activeModulesCount);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Erreur lors du chargement");
-            } finally {
-                setIsLoading(false);
+                setMembers(memberDetails);
+            } else {
+                setMembers([]);
             }
-        }
 
+            // Charger les projets et le nombre de PYW associés à l'entreprise
+            const companyProjects = await ProjectService.listByCompany(
+                session.companyId,
+                session.user.id,
+                session.companyId
+            );
+            const projectPywCounts = await Promise.all(
+                companyProjects.map(async (project) => {
+                    try {
+                        const pyws = await PywService.listByProject(project.id);
+                        return pyws.length;
+                    } catch {
+                        return 0;
+                    }
+                })
+            );
+
+            const projectsCount = companyProjects.length;
+            const activeModulesCount = projectPywCounts.reduce((sum, count) => sum + count, 0);
+
+            setProjectsCount(projectsCount);
+            setActiveModulesCount(activeModulesCount);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Erreur lors du chargement");
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    useEffect(() => {
         loadCompanyData();
     }, []);
 
@@ -147,6 +153,52 @@ export default function CompanyPage() {
             setInviteMessage(err instanceof Error ? err.message : "Invitation impossible.");
         } finally {
             setIsInviting(false);
+        }
+    }
+
+    async function handleRemoveCompanyMember(memberId: string) {
+        const session = AuthService.getSession();
+        if (!session?.companyId || !session.user?.id || !company) {
+            setActionMessage("Impossible d'effectuer l'action pour le moment.");
+            return;
+        }
+
+        if (!window.confirm("Voulez-vous vraiment retirer ce membre de l'entreprise ?")) {
+            return;
+        }
+
+        setActionMessage("");
+        setIsMemberActionLoading(true);
+
+        try {
+            await CompanyService.removeMember(company.id, memberId, session.user.id);
+            await loadCompanyData();
+            setActionMessage("Membre supprimé avec succès.");
+        } catch (err) {
+            setActionMessage(err instanceof Error ? err.message : "Impossible de supprimer le membre.");
+        } finally {
+            setIsMemberActionLoading(false);
+        }
+    }
+
+    async function handleChangeCompanyMemberRole(memberId: string, newRole: string) {
+        const session = AuthService.getSession();
+        if (!session?.companyId || !session.user?.id || !company) {
+            setActionMessage("Impossible d'effectuer l'action pour le moment.");
+            return;
+        }
+
+        setActionMessage("");
+        setIsMemberActionLoading(true);
+
+        try {
+            await CompanyService.updateMemberRole(company.id, memberId, newRole, session.user.id);
+            await loadCompanyData();
+            setActionMessage("Rôle du membre mis à jour avec succès.");
+        } catch (err) {
+            setActionMessage(err instanceof Error ? err.message : "Impossible de mettre à jour le rôle.");
+        } finally {
+            setIsMemberActionLoading(false);
         }
     }
 

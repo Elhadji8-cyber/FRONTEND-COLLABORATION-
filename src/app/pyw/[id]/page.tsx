@@ -1,81 +1,51 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/app/component/layout/app-shell";
 import { AuthService } from "@/services/auth.service";
 import { PywFilesSectionService } from "@/services/pyw-files-section.service";
-import { PywService } from "@/services/pyw.service";
 import { FileService } from "@/services/file.service";
 import { FileVersionService, getVersionDownloadFileName } from "@/services/file-version.service";
 import { VersionTimeline } from "@/app/component/file-version/version-timeline";
 import { VersionDetailModal } from "@/app/component/file-version/version-detail-modal";
+import { usePywDetail, usePywReview, usePywVersions, useSubmitPywVersion } from "@/hooks/usePyw";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import type { FileVersion, PywStatus } from "@/types/pyw";
-import type { PywDetailResponse } from "@/services/pyw.service";
 
 export default function PywDetailPage() {
     const params = useParams();
     const pywId = params.id as string;
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [pyw, setPyw] = useState<PywDetailResponse | null>(null);
-    const [versions, setVersions] = useState<FileVersion[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingVersions, setIsLoadingVersions] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState("");
-    const [status, setStatus] = useState<"approved" | "rejected" | "modified" | "pending">("pending");
     const [ownerComment, setOwnerComment] = useState("");
-    
-    // Modal et détails version
     const [selectedVersion, setSelectedVersion] = useState<FileVersion | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     const session = AuthService.getSession();
     const isOwner = session?.user.role === "owner" || session?.user.role === "admin";
     const router = useRouter();
+    const queryClient = useQueryClient();
 
-    const normalizePywStatus = (status: string): PywStatus => {
-        if (status === "modification_requested") return "modified";
-        if (status === "approved" || status === "rejected" || status === "pending" || status === "modified") {
-            return status;
+    const { data: pyw, isLoading: isLoadingPyw, error: pywError } = usePywDetail(pywId);
+    const { data: versions = [], isLoading: isLoadingVersions, error: versionsError } = usePywVersions(pywId, session?.accessToken);
+    const reviewMutation = usePywReview(pyw?.project_id);
+    const submitVersionMutation = useSubmitPywVersion(pywId);
+    const status = useMemo(() => {
+        if (!pyw) return "pending" as const;
+        if (pyw.status === "modification_requested") return "modified" as const;
+        if (pyw.status === "approved" || pyw.status === "rejected" || pyw.status === "modified") {
+            return pyw.status as "approved" | "rejected" | "modified" | "pending";
         }
-        return "pending";
-    };
+        return "pending" as const;
+    }, [pyw]);
 
-    useEffect(() => {
-        const loadPyw = async () => {
-            if (!pywId) return;
-            setIsLoading(true);
-            try {
-                const data = await PywService.getDetail(pywId);
-                setPyw(data);
-                setStatus(normalizePywStatus(data.status));
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Erreur lors du chargement");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadPyw();
-    }, [pywId]);
-
-    useEffect(() => {
-        const loadVersions = async () => {
-            if (!pywId) return;
-            setIsLoadingVersions(true);
-            try {
-                const history = await FileVersionService.getVersionHistory(pywId, session?.accessToken);
-                setVersions(history);
-            } catch (err) {
-                console.error("Erreur lors du chargement des versions:", err);
-            } finally {
-                setIsLoadingVersions(false);
-            }
-        };
-        loadVersions();
-    }, [pywId, session?.accessToken]);
+    const isLoading = isLoadingPyw || isLoadingVersions;
+    const queryError = pywError || versionsError ? (pywError || versionsError) : null;
+    const pageError = error || queryError ? String(error || queryError) : null;
 
     const handleUploadClick = () => {
         if (fileInputRef.current) {
@@ -92,26 +62,16 @@ export default function PywDetailPage() {
         setError("");
 
         try {
-            const session = AuthService.getSession();
-            if (!session?.user.id || !session.companyId || !pyw?.project_id) {
+            if (!session?.accessToken) {
                 throw new Error("Session manquante");
             }
 
             for (let i = 0; i < files.length; i++) {
-                await PywService.submitVersionWithFile(
-                    pywId,
-                    files[i],
-                    `Upload: ${files[i].name}`,
-                    undefined,
-                    session?.accessToken,
-                );
+                await submitVersionMutation.mutateAsync({
+                    file: files[i],
+                    token: session.accessToken,
+                });
             }
-
-            // Recharger les données du pyw
-            const updated = await PywService.getDetail(pywId);
-            setPyw(updated);
-            const history = await FileVersionService.getVersionHistory(pywId, session?.accessToken);
-            setVersions(history);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Erreur lors de l'upload");
         } finally {
@@ -129,22 +89,26 @@ export default function PywDetailPage() {
         setError("");
 
         try {
-            await PywService.review(pywId, newStatus, ownerComment);
-            setStatus(newStatus);
-            const updated = await PywService.getDetail(pywId);
-            setPyw(updated);
+            await reviewMutation.mutateAsync({
+                pywId,
+                status: newStatus,
+                ownerComment,
+            });
+
             setOwnerComment("");
 
-            if (updated && (newStatus === "modified" || newStatus === "rejected")) {
-                PywFilesSectionService.addCard({
-                    id: updated.id,
-                    title: updated.title,
-                    description: updated.description,
-                    projectName: updated.project_id,
-                    owner: session?.user.name,
-                    updatedAt: new Date().toISOString(),
-                    status: newStatus,
-                });
+            if (newStatus === "modified" || newStatus === "rejected") {
+                if (pyw) {
+                    PywFilesSectionService.addCard({
+                        id: pyw.id,
+                        title: pyw.title,
+                        description: pyw.description,
+                        projectName: pyw.project_id,
+                        owner: session?.user.name,
+                        updatedAt: new Date().toISOString(),
+                        status: newStatus,
+                    });
+                }
                 router.push(`/files`);
                 return;
             }
@@ -198,16 +162,12 @@ export default function PywDetailPage() {
         }
 
         try {
-            // Soumettre la version comme nouvelle version
             await FileVersionService.submitVersion(
                 pywId,
                 version.fileUrl,
-                `Restauration de ${version.versionName}`
+                `Restauration de ${version.versionName}`,
             );
-
-            // Recharger les versions
-            const history = await FileVersionService.getVersionHistory(pywId, session?.accessToken);
-            setVersions(history);
+            await queryClient.invalidateQueries({ queryKey: ["pyw", pywId, "versions"] });
             setError("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Erreur lors de la restauration.");
@@ -295,10 +255,10 @@ export default function PywDetailPage() {
                                 <p className="text-xs text-on-surface-variant">
                                     Formats supportés : DWG, RVT, PLN, ARCHICAD, PDF, DOCX, XLSX, images, ZIP, etc.
                                 </p>
-                                </div>
+                            </div>
 
-                                {/* Deuxième ligne: Boutons de revue pour owner */}
-                                {isOwner && (
+                            {/* Deuxième ligne: Boutons de revue pour owner */}
+                            {isOwner && (
                                     <div className="flex gap-2">
                                         <button
                                             type="button"
@@ -346,7 +306,6 @@ export default function PywDetailPage() {
                                     />
                                 </div>
                             )}
-                        </div>
 
                         {/* Files Section */}
                         <div className="rounded-2xl bg-surface-container-low p-6 shadow-sm">

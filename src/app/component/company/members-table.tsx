@@ -19,6 +19,9 @@ export type CompanyMemberRow = {
 type MembersTableProps = {
   members: CompanyMemberRow[];
   title?: string;
+  isOwner?: boolean;
+  onRemoveMember?: (memberId: string) => Promise<void>;
+  onUpdateMemberRole?: (memberId: string, newRole: string) => Promise<void>;
 };
 
 function roleClasses(role: string) {
@@ -46,6 +49,9 @@ function statusDotClasses(status: string) {
 export function MembersTable({
   members,
   title = "Workspace Personnel",
+  isOwner = false,
+  onRemoveMember,
+  onUpdateMemberRole,
 }: MembersTableProps) {
   return (
     <section className="space-y-6">
@@ -83,6 +89,9 @@ export function MembersTable({
               </th>
               <th className="px-8 py-4 text-right text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">
                 Activity
+              </th>
+              <th className="px-8 py-4 text-right text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">
+                Actions
               </th>
             </tr>
           </TableHead>
@@ -147,6 +156,38 @@ export function MembersTable({
                   <span className="font-mono text-xs text-on-surface-variant">
                     {member.activityLabel}
                   </span>
+                </td>
+                <td className="px-8 py-5 text-right">
+                  {isOwner && member.role.toUpperCase() !== "OWNER" ? (
+                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:justify-end">
+                      {member.role.toUpperCase() === "ADMIN" ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => onUpdateMemberRole?.(member.id, "MEMBER")}
+                        >
+                          Demote
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => onUpdateMemberRole?.(member.id, "ADMIN")}
+                        >
+                          Promote
+                        </Button>
+                      )}
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => onRemoveMember?.(member.id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-on-surface-variant">-</span>
+                  )}
                 </td>
               </tr>
             ))}

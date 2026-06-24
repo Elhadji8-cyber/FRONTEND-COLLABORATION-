@@ -96,4 +96,32 @@ export class CompanyService {
 
     return mapBackendCompany(company);
   }
+
+  static async removeMember(companyId: string, memberId: string, requesterId: string) {
+    const company = await apiFetch<BackendCompany>(`/companies/${companyId}/members/${memberId}`, {
+      method: "DELETE",
+      body: JSON.stringify({
+        requester_id: requesterId,
+      }),
+    });
+
+    return mapBackendCompany(company);
+  }
+
+  static async updateMemberRole(
+    companyId: string,
+    memberId: string,
+    role: string,
+    requesterId: string,
+  ) {
+    const company = await apiFetch<BackendCompany>(`/companies/${companyId}/members/${memberId}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        role,
+        requester_id: requesterId,
+      }),
+    });
+
+    return mapBackendCompany(company);
+  }
 }
