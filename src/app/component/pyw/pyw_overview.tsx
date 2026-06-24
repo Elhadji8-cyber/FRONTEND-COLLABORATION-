@@ -65,22 +65,27 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
             try {
                 const mapped = await Promise.all(
                     works.map(async (work) => {
-                        const owner = await UserService.getById(work.userId);
-                        return pywToCardData(
-                            work,
-                            owner.name || owner.email || "Membre",
-                            owner.avatarUrl,
-                            projectName,
-                        );
+                        try {
+                            const owner = await UserService.getById(work.userId);
+                            return pywToCardData(
+                                work,
+                                owner.name || owner.email || "Membre",
+                                owner.avatarUrl,
+                                projectName,
+                            );
+                        } catch {
+                            return pywToCardData(work, "Membre", undefined, projectName);
+                        }
                     }),
                 );
 
                 if (active) {
                     setCards(mapped);
+                    setError("");
                 }
             } catch (err) {
                 if (active) {
-                    setError(err instanceof Error ? err.message : "Impossible de charger les données des propriétaires.");
+                    setError(err instanceof Error ? err.message : "Impossible de charger les PYW.");
                     setCards([]);
                 }
             }
