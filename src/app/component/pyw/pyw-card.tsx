@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import type { FileVersion } from "@/types/pyw";
 import { AuthService } from "@/services/auth.service";
 import { FileService } from "@/services/file.service";
+import { getVersionDownloadFileName } from "@/services/file-version.service";
 import { cn } from "@/lib/cn";
 import { FaRegComment } from "react-icons/fa";
 import { GrValidate } from "react-icons/gr";
@@ -157,7 +158,6 @@ export function PywCard({
                         </div>
                         <div className="min-w-0">
                             <h3 className="text-lg font-semibold text-on-surface truncate">{card.owner}</h3>
-                            <p className="text-xs text-on-surface-variant truncate">Projet : {card.projectName}</p>
                         </div>
                     </div>
                     {card.description ? (
@@ -299,7 +299,7 @@ export function PywCard({
                                                         handleDownloadFile(
                                                             file.storageKey,
                                                             file.fileUrl,
-                                                            file.fileName || `Version-${file.versionNumber}${file.fileType ? `.${file.fileType.split("/").pop()}` : ""}`,
+                                                            getVersionDownloadFileName(file),
                                                         )
                                                     }
                                                     className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition hover:brightness-110"

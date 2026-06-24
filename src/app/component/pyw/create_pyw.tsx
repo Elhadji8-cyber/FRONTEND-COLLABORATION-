@@ -97,6 +97,9 @@ export function SubmitPywModal({
                             onChange={handleFileChange}
                             className="block w-full text-sm text-on-surface"
                         />
+                        <p className="mt-2 text-xs text-on-surface-variant">
+                            Formats supportés : DWG, RVT, PLN, ARCHICAD, PDF, DOCX, XLSX, images et plus.
+                        </p>
                         {files.length > 0 && (
                             <div className="mt-3 space-y-2 rounded-2xl border border-outline-variant/50 bg-surface-container-high p-4 text-sm text-on-surface-variant">
                                 {files.map((file, index) => (

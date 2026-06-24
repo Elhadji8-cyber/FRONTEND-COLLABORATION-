@@ -60,7 +60,7 @@ export default function ProfilePage() {
             // Charger les projets réels
             let loadedProjects: Project[] = [];
             try {
-                loadedProjects = await ProjectService.listByUser(session.user.id, session.companyId);
+                loadedProjects = await ProjectService.listByUser(session.user.id, session.user.id, session.companyId);
                 const projectNameMap: Record<string, string> = {};
                 const mappedProjects = loadedProjects.map(p => {
                     projectNameMap[p.id] = p.projectName;

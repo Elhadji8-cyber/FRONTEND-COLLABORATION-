@@ -31,7 +31,7 @@ export function CreateChannelModal({ isOpen, onClose, projectId }: CreateChannel
         const session = AuthService.getSession();
         if (!session?.user.id || !session.companyId) return;
 
-        const userProjects = await ProjectService.listByUser(session.user.id, session.companyId);
+        const userProjects = await ProjectService.listByUser(session.user.id, session.user.id, session.companyId);
         setProjects(userProjects);
 
         const defaultProjectId = projectId || userProjects[0]?.id;

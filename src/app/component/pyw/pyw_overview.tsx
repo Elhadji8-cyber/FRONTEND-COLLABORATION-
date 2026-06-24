@@ -338,7 +338,7 @@ export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?:
 
             try {
                 const [data, company] = await Promise.all([
-                    ProjectService.listByUser(session.user.id, session.companyId),
+                    ProjectService.listByUser(session.user.id, session.user.id, session.companyId),
                     CompanyService.getById(session.companyId, session.user.id),
                 ]);
                 setProjects(data);

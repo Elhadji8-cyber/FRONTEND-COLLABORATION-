@@ -44,8 +44,11 @@ export function mapBackendProject(project: BackendProject): Project {
 
 export class ProjectService {
   // Récupère la liste des projets associés à un utilisateur
-  static async listByUser(userId: string, requesterCompanyId: string): Promise<Project[]> {
-    const params = new URLSearchParams({ requester_company_id: requesterCompanyId });
+  static async listByUser(userId: string, requesterId: string, requesterCompanyId: string): Promise<Project[]> {
+    const params = new URLSearchParams({
+      requester_id: requesterId,
+      requester_company_id: requesterCompanyId,
+    });
     const projects = await apiFetch<BackendProject[]>(
       `/users/${userId}/projects?${params.toString()}`
     );
@@ -54,8 +57,11 @@ export class ProjectService {
   }
 
   // Récupère la liste des projets associés à une entreprise
-  static async listByCompany(companyId: string, requesterCompanyId: string): Promise<Project[]> {
-    const params = new URLSearchParams({ requester_company_id: requesterCompanyId });
+  static async listByCompany(companyId: string, requesterId: string, requesterCompanyId: string): Promise<Project[]> {
+    const params = new URLSearchParams({
+      requester_id: requesterId,
+      requester_company_id: requesterCompanyId,
+    });
     const projects = await apiFetch<BackendProject[]>(
       `/companies/${companyId}/projects?${params.toString()}`
     );

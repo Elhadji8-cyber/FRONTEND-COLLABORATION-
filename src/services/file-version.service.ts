@@ -13,7 +13,7 @@ export function mapBackendFileVersion(version: BackendFileVersion): FileVersion 
     versionName: version.version_name,
     companyId: version.company_id,
     changeNote: version.change_note || version.message || "",
-    fileName: version.file_name || undefined,
+    fileName: version.file_name || extractFileNameFromUrl(version.file_url) || extractFileNameFromStorageKey(version.storage_key),
     fileType: version.file_type,
     fileSize: version.file_size,
     fileUrl: version.file_url,
@@ -43,6 +43,35 @@ export function formatVersionDate(iso: string): string {
   } catch {
     return "—";
   }
+}
+
+function extractFileNameFromUrl(fileUrl?: string): string | undefined {
+  if (!fileUrl) return undefined;
+
+  try {
+    const url = new URL(fileUrl, "http://localhost");
+    const path = url.pathname.split("/").filter(Boolean).pop();
+    if (!path) return undefined;
+    return decodeURIComponent(path);
+  } catch {
+    return undefined;
+  }
+}
+
+function extractFileNameFromStorageKey(storageKey?: string): string | undefined {
+  if (!storageKey) return undefined;
+  const parts = storageKey.split("/").filter(Boolean);
+  return parts.length > 0 ? decodeURIComponent(parts[parts.length - 1]) : undefined;
+}
+
+export function getVersionDownloadFileName(version: FileVersion): string {
+  const fallbackExtension = version.fileType ? `.${version.fileType.split("/").pop()}` : "";
+  return (
+    version.fileName ||
+    extractFileNameFromUrl(version.fileUrl) ||
+    extractFileNameFromStorageKey(version.storageKey) ||
+    `${version.versionName || "version"}${fallbackExtension}`
+  );
 }
 
 /**

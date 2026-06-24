@@ -26,7 +26,7 @@ export default function MessagesRedirectPage() {
             }
 
             try {
-                const projects = await ProjectService.listByUser(session.user.id, session.companyId);
+const projects = await ProjectService.listByUser(session.user.id, session.user.id, session.companyId);
 
                 if (projects.length === 0) {
                     setMessage("");

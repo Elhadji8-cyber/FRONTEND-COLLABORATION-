@@ -85,7 +85,11 @@ export default function CompanyPage() {
                 }
 
                 // Charger les projets et le nombre de PYW associés à l'entreprise
-                const companyProjects = await ProjectService.listByCompany(session.companyId, session.companyId);
+                const companyProjects = await ProjectService.listByCompany(
+                    session.companyId,
+                    session.user.id,
+                    session.companyId
+                );
                 const projectPywCounts = await Promise.all(
                     companyProjects.map(async (project) => {
                         try {

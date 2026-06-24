@@ -7,12 +7,11 @@ import { AuthService } from "@/services/auth.service";
 import { PywFilesSectionService } from "@/services/pyw-files-section.service";
 import { PywService } from "@/services/pyw.service";
 import { FileService } from "@/services/file.service";
-import { FileVersionService } from "@/services/file-version.service";
+import { FileVersionService, getVersionDownloadFileName } from "@/services/file-version.service";
 import { VersionTimeline } from "@/app/component/file-version/version-timeline";
 import { VersionDetailModal } from "@/app/component/file-version/version-detail-modal";
-import { CiFileOn, CiSaveDown1 } from "react-icons/ci";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import type { FileVersion } from "@/types/pyw";
+import type { FileVersion, PywStatus } from "@/types/pyw";
 import type { PywDetailResponse } from "@/services/pyw.service";
 
 export default function PywDetailPage() {
@@ -37,6 +36,14 @@ export default function PywDetailPage() {
     const isOwner = session?.user.role === "owner" || session?.user.role === "admin";
     const router = useRouter();
 
+    const normalizePywStatus = (status: string): PywStatus => {
+        if (status === "modification_requested") return "modified";
+        if (status === "approved" || status === "rejected" || status === "pending" || status === "modified") {
+            return status;
+        }
+        return "pending";
+    };
+
     useEffect(() => {
         const loadPyw = async () => {
             if (!pywId) return;
@@ -44,11 +51,7 @@ export default function PywDetailPage() {
             try {
                 const data = await PywService.getDetail(pywId);
                 setPyw(data);
-                setStatus(
-                    data.status === "modification_requested"
-                        ? "modified"
-                        : (data.status as any)
-                );
+                setStatus(normalizePywStatus(data.status));
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Erreur lors du chargement");
             } finally {
@@ -119,35 +122,6 @@ export default function PywDetailPage() {
         }
     };
 
-    const handleDownloadFile = async (storageKey: string, fileName: string, fileUrl?: string) => {
-        if (!session?.companyId || !session.accessToken) {
-            setError("Session utilisateur introuvable pour le téléchargement.");
-            return;
-        }
-
-        try {
-            const blob = await FileService.downloadFileByReference(
-                storageKey,
-                fileUrl,
-                fileName,
-                session.companyId,
-                session.accessToken,
-            );
-
-            const objectUrl = URL.createObjectURL(blob);
-            const anchor = document.createElement("a");
-            anchor.href = objectUrl;
-            anchor.download = fileName;
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
-            URL.revokeObjectURL(objectUrl);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            setError(message || "Erreur lors du téléchargement du fichier.");
-        }
-    };
-
     const handleStatusChange = async (newStatus: "approved" | "rejected" | "modified") => {
         if (!isOwner || !pywId) return;
 
@@ -194,9 +168,7 @@ export default function PywDetailPage() {
         }
 
         try {
-            // Préférer le nom de fichier d'origine stocké en base.
-            // Ceci évite de reconstruire un nom générique comme v1.dwg.
-            const downloadFileName = version.fileName || `${version.versionName || 'fichier'}${version.fileType ? `.${version.fileType.split('/').pop()}` : ''}`;
+            const downloadFileName = getVersionDownloadFileName(version);
             const blob = await FileService.downloadFileByReference(
                 version.storageKey,
                 version.fileUrl,
@@ -318,8 +290,11 @@ export default function PywDetailPage() {
                                         className="hidden"
                                         onChange={handleFileChange}
                                         disabled={isUploading}
-                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.zip"
                                     />
+                                </div>
+                                <p className="text-xs text-on-surface-variant">
+                                    Formats supportés : DWG, RVT, PLN, ARCHICAD, PDF, DOCX, XLSX, images, ZIP, etc.
+                                </p>
                                 </div>
 
                                 {/* Deuxième ligne: Boutons de revue pour owner */}

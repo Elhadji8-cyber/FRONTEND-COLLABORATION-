@@ -262,7 +262,7 @@ export default function ProjectMessagesPage() {
         async function fetchFirstProject() {
             if (projectId === "alpha" && userId && companyId) {
                 try {
-                    const projs = await ProjectService.listByUser(userId, companyId);
+                    const projs = await ProjectService.listByUser(userId, userId, companyId);
                     if (projs.length > 0) {
                         router.push(`/projects/${projs[0].id}/messages`);
                     } else {

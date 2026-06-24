@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { AuthService } from "@/services/auth.service";
 import { FileService } from "@/services/file.service";
+import { getVersionDownloadFileName } from "@/services/file-version.service";
 import type { FileVersion } from "@/types/pyw";
 import type { PywCardData } from "./pyw-card";
 
@@ -131,7 +132,7 @@ export function PywDetailPanel({ card, versions, isLoadingVersions = false, onCl
                                                 handleDownloadFile(
                                                     version.storageKey,
                                                     version.fileUrl,
-                                                    version.fileName || `${version.versionName || "fichier"}${version.fileType ? `.${version.fileType.split("/").pop()}` : ""}`,
+                                                    getVersionDownloadFileName(version),
                                                 )
                                             }
                                             className="mt-2 inline-block text-primary underline"

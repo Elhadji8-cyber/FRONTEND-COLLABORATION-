@@ -54,7 +54,7 @@ export function ProfilePyw({ works, projectNames, contributionsMap, contribution
                     <div className="-ml-1 mb-2 flex items-center gap-3">
                       <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: color }} />
                       <p className="text-xs uppercase tracking-[0.16em] text-on-surface-variant">
-                        {projectNames[work.projectId] ?? "Projet PYW"}
+                        PYW soumis
                       </p>
                     </div>
                     <h4 className="text-base font-semibold text-on-surface">{work.title}</h4>
