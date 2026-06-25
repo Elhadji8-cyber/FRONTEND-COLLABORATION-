@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/app/component/layout/app-shell";
@@ -12,7 +12,12 @@ import { VersionTimeline } from "@/app/component/file-version/version-timeline";
 import { VersionDetailModal } from "@/app/component/file-version/version-detail-modal";
 import { usePywDetail, usePywReview, usePywVersions, useSubmitPywVersion } from "@/hooks/usePyw";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import type { FileVersion, PywStatus } from "@/types/pyw";
+import type { FileVersion } from "@/types/pyw";
+
+function canReviewPyw(role?: string) {
+    const normalizedRole = role?.trim().toUpperCase();
+    return normalizedRole === "OWNER" || normalizedRole === "ADMIN";
+}
 
 export default function PywDetailPage() {
     const params = useParams();
@@ -26,7 +31,7 @@ export default function PywDetailPage() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     const session = AuthService.getSession();
-    const isOwner = session?.user.role === "owner" || session?.user.role === "admin";
+    const isOwner = canReviewPyw(session?.user.role);
     const router = useRouter();
     const queryClient = useQueryClient();
 
@@ -126,7 +131,7 @@ export default function PywDetailPage() {
     };
 
     const handleDownloadVersion = async (version: FileVersion) => {
-        if (!session?.companyId || !session.accessToken) {
+        if (!session?.accessToken) {
             setError("Session utilisateur introuvable pour le téléchargement.");
             return;
         }

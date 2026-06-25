@@ -226,7 +226,7 @@ export function PYWOverview({ projectId = "", companyId = "", projectName, isOwn
             });
 
             const session = AuthService.getSession();
-            if (!session?.user.id || !session.companyId) {
+            if (!session?.user.id || !session.accessToken) {
                 throw new Error("Session manquante");
             }
 

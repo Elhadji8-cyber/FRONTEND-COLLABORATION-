@@ -28,7 +28,7 @@ export function PywDetailPanel({ card, versions, isLoadingVersions = false, onCl
         fileName: string,
     ) => {
         const session = AuthService.getSession();
-        if (!session?.companyId || !session.accessToken) {
+        if (!session?.accessToken) {
             console.error("Aucune session valide pour le téléchargement.");
             return;
         }

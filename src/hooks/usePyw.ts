@@ -63,8 +63,9 @@ export const usePywVersions = (pywId: string, token?: string) => {
   });
 };
 
-export const usePywReview = (projectId?: string) => {
+export const usePywReview = (_projectId?: string) => {
   const queryClient = useQueryClient();
+  void _projectId;
 
   return useMutation({
     mutationFn: async (payload: { pywId: string; status: Exclude<PywStatus, "pending">; ownerComment?: string }) => {
@@ -75,9 +76,8 @@ export const usePywReview = (projectId?: string) => {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["pyw", variables.pywId] });
-      if (projectId) {
-        queryClient.invalidateQueries({ queryKey: ["pyw", "project", projectId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ["pyw", "project"] });
+      queryClient.invalidateQueries({ queryKey: ["pyw", "company"] });
     },
   });
 };
@@ -99,12 +99,8 @@ export const usePywSubmit = (projectId?: string, companyId?: string) => {
       });
     },
     onSuccess: () => {
-      if (projectId) {
-        queryClient.invalidateQueries({ queryKey: ["pyw", "project", projectId] });
-      }
-      if (companyId) {
-        queryClient.invalidateQueries({ queryKey: ["pyw", "company", companyId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ["pyw", "project"] });
+      queryClient.invalidateQueries({ queryKey: ["pyw", "company"] });
     },
   });
 };
@@ -125,15 +121,18 @@ export const useSubmitPywVersion = (pywId: string) => {
         payload.token,
       );
     },
-    onSuccess: (_, __, context) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pyw", pywId] });
       queryClient.invalidateQueries({ queryKey: ["pyw", pywId, "versions"] });
+      queryClient.invalidateQueries({ queryKey: ["pyw", "project"] });
+      queryClient.invalidateQueries({ queryKey: ["pyw", "company"] });
     },
   });
 };
 
-export const usePywDelete = (projectId?: string) => {
+export const usePywDelete = (_projectId?: string) => {
   const queryClient = useQueryClient();
+  void _projectId;
 
   return useMutation({
     mutationFn: async (pywId: string) => {
@@ -144,10 +143,9 @@ export const usePywDelete = (projectId?: string) => {
       return PywService.delete(pywId, session?.accessToken);
     },
     onSuccess: (_, pywId) => {
-      if (projectId) {
-        queryClient.invalidateQueries({ queryKey: ["pyw", "project", projectId] });
-      }
       queryClient.invalidateQueries({ queryKey: ["pyw", pywId] });
+      queryClient.invalidateQueries({ queryKey: ["pyw", "project"] });
+      queryClient.invalidateQueries({ queryKey: ["pyw", "company"] });
     },
   });
 };

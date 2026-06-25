@@ -129,10 +129,11 @@ export class FileService {
     return mapBackendFile(file);
   }
 
-  static async downloadFile(fileId: string, companyId: string, token: string): Promise<Blob> {
-    const params = new URLSearchParams({
-      requester_company_id: companyId,
-    });
+  static async downloadFile(fileId: string, companyId?: string, token?: string): Promise<Blob> {
+    const params = new URLSearchParams();
+    if (companyId) {
+      params.set("requester_company_id", companyId);
+    }
 
     return fetchBlob(`${API_BASE_URL}/files/${fileId}/download?${params.toString()}`, token);
   }
@@ -152,8 +153,11 @@ export class FileService {
 
     const params = new URLSearchParams({
       storage_key: resolvedStorageKey,
-      requester_company_id: companyId || "",
     });
+
+    if (companyId) {
+      params.set("requester_company_id", companyId);
+    }
 
     if (fileName) {
       params.set("file_name", fileName);
