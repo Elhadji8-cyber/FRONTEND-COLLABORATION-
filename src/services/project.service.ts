@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api";
+import { AuthService } from "@/services/auth.service";
 import type { BackendProject, Project } from "@/types/project";
 
 type Requester = {
@@ -50,7 +51,8 @@ export class ProjectService {
       requester_company_id: requesterCompanyId,
     });
     const projects = await apiFetch<BackendProject[]>(
-      `/users/${userId}/projects?${params.toString()}`
+      `/users/${userId}/projects?${params.toString()}`,
+      { token: AuthService.getAccessToken() }
     );
 
     return (projects || []).map(mapBackendProject);
@@ -63,7 +65,8 @@ export class ProjectService {
       requester_company_id: requesterCompanyId,
     });
     const projects = await apiFetch<BackendProject[]>(
-      `/companies/${companyId}/projects?${params.toString()}`
+      `/companies/${companyId}/projects?${params.toString()}`,
+      { token: AuthService.getAccessToken() }
     );
 
     return (projects || []).map(mapBackendProject);

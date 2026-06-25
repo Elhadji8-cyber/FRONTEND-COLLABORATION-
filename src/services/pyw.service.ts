@@ -71,7 +71,9 @@ export type PywDetailResponse = {
 };
 
 export async function getPywDetail(pywId: string): Promise<PywDetailResponse> {
-  const pyw = await apiFetch<BackendPyw>(`/pyw/${pywId}`);
+  const pyw = await apiFetch<BackendPyw>(`/pyw/${pywId}`, {
+    token: AuthService.getAccessToken(),
+  });
   return {
     id: pyw._id || pyw.id || "",
     project_id: pyw.project_id,
@@ -144,6 +146,7 @@ export class PywService {
   }): Promise<string> {
     const response = await apiFetch<{ pyw_id?: string; message?: string }>("/pyw/", {
       method: "POST",
+      token: AuthService.getAccessToken(),
       body: JSON.stringify({
         project_id: payload.projectId,
         title: payload.title,
@@ -162,6 +165,7 @@ export class PywService {
   ): Promise<void> {
     await apiFetch<{ message?: string }>(`/pyw/${pywId}/review`, {
       method: "PATCH",
+      token: AuthService.getAccessToken(),
       body: JSON.stringify({
         status: mapUiStatusToApi(status),
         owner_comment: ownerComment,
@@ -170,7 +174,9 @@ export class PywService {
   }
 
   static async getVersionHistory(pywId: string): Promise<FileVersion[]> {
-    const response = await apiFetch<BackendFileVersion[]>(`/pyw/${pywId}/versions`);
+    const response = await apiFetch<BackendFileVersion[]>(`/pyw/${pywId}/versions`, {
+      token: AuthService.getAccessToken(),
+    });
     return (response || []).map(mapBackendFileVersion);
   }
 

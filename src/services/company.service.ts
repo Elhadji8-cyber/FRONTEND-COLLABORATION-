@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api";
+import { AuthService } from "@/services/auth.service";
 import type { BackendCompany, Company } from "@/types/company";
 
 type CreateCompanyPayload = {
@@ -41,13 +42,16 @@ export function mapBackendCompany(company: BackendCompany): Company {
 
 export class CompanyService {
   static async listByUser(userId: string): Promise<Company[]> {
-    const companies = await apiFetch<BackendCompany[]>(`/users/${userId}/companies`);
+    const companies = await apiFetch<BackendCompany[]>(`/users/${userId}/companies`, {
+      token: AuthService.getAccessToken(),
+    });
     return (companies || []).map(mapBackendCompany);
   }
 
   static async create(payload: CreateCompanyPayload): Promise<Company> {
     const company = await apiFetch<BackendCompany>("/companies/", {
       method: "POST",
+      token: AuthService.getAccessToken(),
       body: JSON.stringify({
         company_name: payload.companyName,
         description: payload.description || "",
@@ -62,7 +66,8 @@ export class CompanyService {
   static async getById(companyId: string, requesterId: string): Promise<Company> {
     const params = new URLSearchParams({ requester_id: requesterId });
     const company = await apiFetch<BackendCompany>(
-      `/companies/${companyId}?${params.toString()}`
+      `/companies/${companyId}?${params.toString()}`,
+      { token: AuthService.getAccessToken() }
     );
 
     return mapBackendCompany(company);
@@ -71,6 +76,7 @@ export class CompanyService {
   static async update(companyId: string, payload: UpdateCompanyPayload): Promise<Company> {
     const company = await apiFetch<BackendCompany>(`/companies/${companyId}`, {
       method: "PUT",
+      token: AuthService.getAccessToken(),
       body: JSON.stringify({
         company_name: payload.companyName,
         description: payload.description,
@@ -87,6 +93,7 @@ export class CompanyService {
   static async addMember(companyId: string, userId: string, requesterId: string, role?: string) {
     const company = await apiFetch<BackendCompany>(`/companies/${companyId}/members`, {
       method: "POST",
+      token: AuthService.getAccessToken(),
       body: JSON.stringify({
         user_id: userId,
         role,
@@ -100,6 +107,7 @@ export class CompanyService {
   static async removeMember(companyId: string, memberId: string, requesterId: string) {
     const company = await apiFetch<BackendCompany>(`/companies/${companyId}/members/${memberId}`, {
       method: "DELETE",
+      token: AuthService.getAccessToken(),
       body: JSON.stringify({
         requester_id: requesterId,
       }),
@@ -116,6 +124,7 @@ export class CompanyService {
   ) {
     const company = await apiFetch<BackendCompany>(`/companies/${companyId}/members/${memberId}`, {
       method: "PUT",
+      token: AuthService.getAccessToken(),
       body: JSON.stringify({
         role,
         requester_id: requesterId,
