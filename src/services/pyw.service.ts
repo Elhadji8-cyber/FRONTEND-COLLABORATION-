@@ -37,6 +37,7 @@ export function mapBackendPyw(pyw: BackendPyw, index = 0): Pyw {
   return {
     id: pyw._id || pyw.id || "",
     projectId: pyw.project_id,
+    companyId: pyw.company_id,
     userId: pyw.user_id,
     title: pyw.title,
     description: pyw.description,
@@ -56,7 +57,8 @@ export function mapBackendFileVersion(version: BackendFileVersion): FileVersion 
 
 export type PywDetailResponse = {
   id: string;
-  project_id: string;
+  project_id?: string;
+  company_id?: string;
   title: string;
   description?: string;
   status: string;
@@ -77,6 +79,7 @@ export async function getPywDetail(pywId: string): Promise<PywDetailResponse> {
   return {
     id: pyw._id || pyw.id || "",
     project_id: pyw.project_id,
+    company_id: pyw.company_id,
     title: pyw.title,
     description: pyw.description,
     status: pyw.status,
@@ -110,6 +113,13 @@ export class PywService {
     return (works || []).map((work, index) => mapBackendPyw(work, index));
   }
 
+  static async listByCompany(companyId: string): Promise<Pyw[]> {
+    const works = await apiFetch<BackendPyw[]>(`/companies/${companyId}/pyw`, {
+      token: AuthService.getAccessToken(),
+    });
+    return (works || []).map((work, index) => mapBackendPyw(work, index));
+  }
+
   static async getById(pywId: string, token?: string): Promise<Pyw> {
     const work = await apiFetch<BackendPyw>(`/pyw/${pywId}`, {
       token,
@@ -124,6 +134,7 @@ export class PywService {
     return {
       id: pyw._id || pyw.id || "",
       project_id: pyw.project_id,
+      company_id: pyw.company_id,
       title: pyw.title,
       description: pyw.description,
       status: pyw.status,
@@ -139,7 +150,8 @@ export class PywService {
   }
 
   static async create(payload: {
-    projectId: string;
+    projectId?: string;
+    companyId?: string;
     title: string;
     description?: string;
     filesUrl?: string;
@@ -149,6 +161,7 @@ export class PywService {
       token: AuthService.getAccessToken(),
       body: JSON.stringify({
         project_id: payload.projectId,
+        company_id: payload.companyId,
         title: payload.title,
         description: payload.description,
         files_url: payload.filesUrl,

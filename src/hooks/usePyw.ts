@@ -21,6 +21,20 @@ export const usePywList = (projectId: string) => {
   });
 };
 
+export const useCompanyPywList = (companyId: string) => {
+  return useQuery<Pyw[]>({
+    queryKey: ["pyw", "company", companyId],
+    queryFn: async () => {
+      if (!companyId) {
+        throw new Error("Identifiant d'entreprise manquant.");
+      }
+      return PywService.listByCompany(companyId);
+    },
+    enabled: !!companyId,
+    staleTime: DEFAULT_STALE_TIME,
+  });
+};
+
 export const usePywDetail = (pywId: string) => {
   return useQuery<PywDetailResponse>({
     queryKey: ["pyw", pywId],
@@ -68,23 +82,29 @@ export const usePywReview = (projectId?: string) => {
   });
 };
 
-export const usePywSubmit = (projectId: string) => {
+export const usePywSubmit = (projectId?: string, companyId?: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: { title: string; description?: string; filesUrl?: string }) => {
-      if (!projectId) {
-        throw new Error("Identifiant de projet manquant.");
+      if (!projectId && !companyId) {
+        throw new Error("Identifiant de projet ou d'entreprise manquant.");
       }
       return PywService.create({
         projectId,
+        companyId,
         title: payload.title,
         description: payload.description,
         filesUrl: payload.filesUrl,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pyw", "project", projectId] });
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ["pyw", "project", projectId] });
+      }
+      if (companyId) {
+        queryClient.invalidateQueries({ queryKey: ["pyw", "company", companyId] });
+      }
     },
   });
 };

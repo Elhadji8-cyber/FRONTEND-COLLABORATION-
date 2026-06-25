@@ -116,7 +116,7 @@ export default function ProjectMessagesPage() {
                         .map((c) => ({
                             id: c.id,
                             name: c.title || "Canal de projet",
-                            projectId: c.projectId,
+                            projectId: c.projectId || projectId,
                             isOwner: c.members.some(
                                 (member) =>
                                     member.userId === userId &&

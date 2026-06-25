@@ -4,12 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/services/auth.service";
 import { PywFilesSectionService } from "@/services/pyw-files-section.service";
-import { FileService } from "@/services/file.service";
 import { PywService } from "@/services/pyw.service";
 import { UserService } from "@/services/user.service";
 import { ConversationService } from "@/services/conversation.service";
 import { useProjects } from "@/hooks/useProjects";
-import { usePywList, usePywReview, usePywSubmit, usePywDelete } from "@/hooks/usePyw";
+import { useCompanyPywList, usePywList, usePywReview, usePywSubmit, usePywDelete } from "@/hooks/usePyw";
 import { formatPywDate } from "@/services/pyw.service";
 import type { Pyw, FileVersion } from "@/types/pyw";
 import { PywCard, type PywCardData, type PywStatus } from "./pyw-card";
@@ -32,13 +31,14 @@ function pywToCardData(pyw: Pyw, ownerLabel: string, ownerAvatar: string | undef
 }
 
 type PYWOverviewProps = {
-    projectId: string;
+    projectId?: string;
+    companyId?: string;
     projectName: string;
     isOwner: boolean;
     searchTerm?: string;
 };
 
-export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }: PYWOverviewProps) {
+export function PYWOverview({ projectId = "", companyId = "", projectName, isOwner, searchTerm = "" }: PYWOverviewProps) {
     const [cards, setCards] = useState<PywCardData[]>([]);
     const [openedCardId, setOpenedCardId] = useState<string | null>(null);
     const [versions, setVersions] = useState<FileVersion[]>([]);
@@ -47,11 +47,13 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
     const [showSubmitModal, setShowSubmitModal] = useState(false);
     const [isDirectMessageSubmitting, setIsDirectMessageSubmitting] = useState(false);
 
-    const { data, isLoading: isLoadingWorks, error: worksError } = usePywList(projectId);
-    const works = useMemo(() => data ?? [], [data]);
+    const projectWorksQuery = usePywList(projectId);
+    const companyWorksQuery = useCompanyPywList(projectId ? "" : companyId);
+    const activeWorksQuery = projectId ? projectWorksQuery : companyWorksQuery;
+    const works = useMemo(() => activeWorksQuery.data ?? [], [activeWorksQuery.data]);
     const reviewMutation = usePywReview(projectId);
     const deleteMutation = usePywDelete(projectId);
-    const submitMutation = usePywSubmit(projectId);
+    const submitMutation = usePywSubmit(projectId, projectId ? undefined : companyId);
 
     useEffect(() => {
         let active = true;
@@ -102,15 +104,15 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
     const approvedCount = useMemo(() => works.filter((w) => w.status === "approved").length, [works]);
     const modifiedCount = useMemo(() => works.filter((w) => w.status === "modified").length, [works]);
 
-    const isLoading = isLoadingWorks;
+    const isLoading = activeWorksQuery.isLoading;
     const isSubmitting = submitMutation.status === "pending" || reviewMutation.status === "pending" || deleteMutation.status === "pending" || isDirectMessageSubmitting;
-    const queryError = worksError ? (worksError instanceof Error ? worksError.message : String(worksError)) : "";
+    const queryError = activeWorksQuery.error ? (activeWorksQuery.error instanceof Error ? activeWorksQuery.error.message : String(activeWorksQuery.error)) : "";
 
     useEffect(() => {
-        if (worksError) {
+        if (activeWorksQuery.error) {
             setError(queryError);
         }
-    }, [worksError, queryError]);
+    }, [activeWorksQuery.error, queryError]);
 
     const handleStatusChange = async (id: string, status: Exclude<PywStatus, "pending">) => {
         setError("");
@@ -173,6 +175,10 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
         setError("");
 
         try {
+            if (!projectId) {
+                throw new Error("Le chat direct PYW nécessite un projet.");
+            }
+
             const conversations = await ConversationService.listByProject(
                 projectId,
                 session.user.id,
@@ -207,8 +213,8 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
     };
 
     const handleUpload = async (title: string, files: FileList) => {
-        if (!projectId || !projectId.trim()) {
-            throw new Error("Project inconnu");
+        if (!projectId && !companyId) {
+            throw new Error("Projet ou entreprise inconnu");
         }
 
         setError("");
@@ -225,32 +231,12 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
             }
 
             for (let i = 0; i < files.length; i++) {
-                const uploadedFile = await FileService.upload({
-                    file: files[i],
-                    projectId,
-                    companyId: session.companyId,
-                    uploadedBy: session.user.id,
-                });
-
-                const fileUrl = uploadedFile.downloadUrl || uploadedFile.storageKey;
-                const fileName = uploadedFile.fileName || files[i].name;
-                const fileSize = typeof uploadedFile.fileSize === "number" && uploadedFile.fileSize > 0
-                    ? uploadedFile.fileSize
-                    : files[i].size;
-                const fileType = uploadedFile.fileType || files[i].type || "application/octet-stream";
-
-                if (!fileUrl) {
-                    throw new Error("Impossible de récupérer l'URL du fichier uploadé.");
-                }
-
-                await PywService.submitVersion(
+                await PywService.submitVersionWithFile(
                     pywId,
-                    fileUrl,
-                    `Upload initial : ${fileName}`,
-                    uploadedFile.storageKey,
-                    fileName,
-                    fileSize,
-                    fileType,
+                    files[i],
+                    `Upload initial : ${files[i].name}`,
+                    undefined,
+                    session.accessToken,
                 );
             }
 
@@ -329,7 +315,7 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
                     </p>
                 ) : visibleCards.length === 0 ? (
                     <p className="py-12 text-center text-sm text-on-surface-variant">
-                        Aucun PYW trouvé pour l'utilisateur recherché.
+                        Aucun PYW trouvé pour l&apos;utilisateur recherché.
                     </p>
                 ) : (
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -359,7 +345,7 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
 
 export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?: string }) {
     const [isMounted, setIsMounted] = useState(false);
-    const { enrichedProjects, projectsQuery, companyQuery } = useProjects();
+    const { enrichedProjects, projectsQuery, companyQuery, companyId } = useProjects();
     const [projectId, setProjectId] = useState("");
     const [projectName, setProjectName] = useState("");
 
@@ -382,6 +368,15 @@ export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?:
         if (companyQuery.data?.ownerId === currentUserId) {
             return true;
         }
+        if (!selectedProject) {
+            return (
+                companyQuery.data?.members?.some(
+                    (member) =>
+                        member.userId === currentUserId &&
+                        ["OWNER", "ADMIN"].includes(member.role?.toUpperCase() ?? ""),
+                ) ?? false
+            );
+        }
         return (
             selectedProject?.members?.some(
                 (member) =>
@@ -389,7 +384,7 @@ export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?:
                     ["OWNER", "ADMIN"].includes(member.role?.toUpperCase() ?? ""),
             ) ?? false
         );
-    }, [companyQuery.data?.ownerId, currentUserId, selectedProject]);
+    }, [companyQuery.data?.members, companyQuery.data?.ownerId, currentUserId, selectedProject]);
 
     useEffect(() => {
         if (!projects.length) {
@@ -413,6 +408,17 @@ export function PYWOverviewWithProjectPicker({ searchTerm = "" }: { searchTerm?:
     if (error) {
         const message = error instanceof Error ? error.message : String(error);
         return <p className="rounded-2xl bg-error-container px-4 py-3 text-sm text-error">{message}</p>;
+    }
+
+    if (projects.length === 0 && companyId) {
+        return (
+            <PYWOverview
+                companyId={companyId}
+                projectName={companyQuery.data?.companyName || "Entreprise"}
+                isOwner={isOwner}
+                searchTerm={searchTerm}
+            />
+        );
     }
 
     if (projects.length === 0) {

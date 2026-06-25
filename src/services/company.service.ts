@@ -53,10 +53,10 @@ export class CompanyService {
       method: "POST",
       token: AuthService.getAccessToken(),
       body: JSON.stringify({
-        company_name: payload.companyName,
+        name: payload.companyName,
         description: payload.description || "",
         logo_url: payload.logoUrl || "",
-        owner_id: payload.ownerId,
+        owner_user_id: payload.ownerId,
       }),
     });
 
@@ -78,7 +78,7 @@ export class CompanyService {
       method: "PUT",
       token: AuthService.getAccessToken(),
       body: JSON.stringify({
-        company_name: payload.companyName,
+        name: payload.companyName,
         description: payload.description,
         logo_url: payload.logoUrl,
         subscription_plan: payload.subscriptionPlan,

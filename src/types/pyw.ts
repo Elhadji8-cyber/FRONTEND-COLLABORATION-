@@ -9,7 +9,8 @@ export type PywStatus = "pending" | "approved" | "rejected" | "modified";
 export interface BackendPyw {
   _id?: string;
   id?: string;
-  project_id: string;
+  project_id?: string;
+  company_id?: string;
   user_id: string;
   title: string;
   description?: string;
@@ -33,7 +34,8 @@ export interface BackendWorkFile {
 
 export interface Pyw {
   id: string;
-  projectId: string;
+  projectId?: string;
+  companyId?: string;
   userId: string;
   title: string;
   description?: string;
