@@ -233,11 +233,25 @@ export function PYWOverview({ projectId, projectName, isOwner, searchTerm = "" }
                 });
 
                 const fileUrl = uploadedFile.downloadUrl || uploadedFile.storageKey;
+                const fileName = uploadedFile.fileName || files[i].name;
+                const fileSize = typeof uploadedFile.fileSize === "number" && uploadedFile.fileSize > 0
+                    ? uploadedFile.fileSize
+                    : files[i].size;
+                const fileType = uploadedFile.fileType || files[i].type || "application/octet-stream";
+
                 if (!fileUrl) {
                     throw new Error("Impossible de récupérer l'URL du fichier uploadé.");
                 }
 
-                await PywService.submitVersion(pywId, fileUrl, `Upload initial : ${uploadedFile.fileName}`);
+                await PywService.submitVersion(
+                    pywId,
+                    fileUrl,
+                    `Upload initial : ${fileName}`,
+                    uploadedFile.storageKey,
+                    fileName,
+                    fileSize,
+                    fileType,
+                );
             }
 
             setShowSubmitModal(false);

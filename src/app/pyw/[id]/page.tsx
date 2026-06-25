@@ -45,7 +45,7 @@ export default function PywDetailPage() {
 
     const isLoading = isLoadingPyw || isLoadingVersions;
     const queryError = pywError || versionsError ? (pywError || versionsError) : null;
-    const pageError = error || queryError ? String(error || queryError) : null;
+    const displayError = error || (queryError ? String(queryError) : null);
 
     const handleUploadClick = () => {
         if (fileInputRef.current) {
@@ -166,6 +166,11 @@ export default function PywDetailPage() {
                 pywId,
                 version.fileUrl,
                 `Restauration de ${version.versionName}`,
+                version.storageKey,
+                version.fileName,
+                version.fileSize,
+                version.fileType,
+                session?.accessToken,
             );
             await queryClient.invalidateQueries({ queryKey: ["pyw", pywId, "versions"] });
             setError("");
@@ -181,9 +186,9 @@ export default function PywDetailPage() {
                     <div className="text-center py-12">
                         <p className="text-on-surface-variant">Chargement...</p>
                     </div>
-                ) : error ? (
+                ) : displayError ? (
                     <div className="text-center py-12">
-                        <p className="text-error">{error}</p>
+                        <p className="text-error">{displayError}</p>
                     </div>
                 ) : !pyw ? (
                     <div className="text-center py-12">

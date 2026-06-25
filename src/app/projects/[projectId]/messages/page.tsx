@@ -46,7 +46,12 @@ export default function ProjectMessagesPage() {
     const [canCreateChannel, setCanCreateChannel] = useState(false);
     const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
     const [noProjectError, setNoProjectError] = useState("");
-    const [channels, setChannels] = useState<{ id: string; name: string }[]>([]);
+    const [channels, setChannels] = useState<{
+        id: string;
+        name: string;
+        projectId: string;
+        isOwner: boolean;
+    }[]>([]);
     const [directMessages, setDirectMessages] = useState<{
         id: string;
         name: string;
@@ -103,11 +108,20 @@ export default function ProjectMessagesPage() {
                     const userConvs = await ConversationService.listByUser(userId, companyId);
 
                     const projectChannels = userConvs
-                        .filter((c) => String(c.type).toUpperCase() !== "DIRECT")
+                        .filter(
+                            (c) =>
+                                String(c.type).toUpperCase() !== "DIRECT" &&
+                                c.projectId === projectId
+                        )
                         .map((c) => ({
                             id: c.id,
                             name: c.title || "Canal de projet",
                             projectId: c.projectId,
+                            isOwner: c.members.some(
+                                (member) =>
+                                    member.userId === userId &&
+                                    String(member.role).toUpperCase() === "OWNER"
+                            ),
                         }))
                         .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
@@ -346,7 +360,7 @@ export default function ProjectMessagesPage() {
                             name: c.name,
                             active: c.id === activeConversationId,
                             onClick: () => setActiveConversationId(c.id),
-                            onDelete: isOwner ? () => handleDeleteChannel(c.id) : undefined,
+                            onDelete: c.isOwner ? () => handleDeleteChannel(c.id) : undefined,
                         }))}
                         directMessages={directMessages.map((dm) => ({
                             id: dm.id,

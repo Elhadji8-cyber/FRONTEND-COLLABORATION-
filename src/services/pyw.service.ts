@@ -108,13 +108,17 @@ export class PywService {
     return (works || []).map((work, index) => mapBackendPyw(work, index));
   }
 
-  static async getById(pywId: string): Promise<Pyw> {
-    const work = await apiFetch<BackendPyw>(`/pyw/${pywId}`);
+  static async getById(pywId: string, token?: string): Promise<Pyw> {
+    const work = await apiFetch<BackendPyw>(`/pyw/${pywId}`, {
+      token,
+    });
     return mapBackendPyw(work);
   }
 
-  static async getDetail(pywId: string): Promise<PywDetailResponse> {
-    const pyw = await apiFetch<BackendPyw>(`/pyw/${pywId}`);
+  static async getDetail(pywId: string, token?: string): Promise<PywDetailResponse> {
+    const pyw = await apiFetch<BackendPyw>(`/pyw/${pywId}`, {
+      token,
+    });
     return {
       id: pyw._id || pyw.id || "",
       project_id: pyw.project_id,
@@ -175,14 +179,33 @@ export class PywService {
     fileUrl: string,
     message?: string,
     storageKey?: string,
+    fileName?: string,
+    fileSize?: number,
+    fileType?: string,
+    token?: string,
   ): Promise<void> {
+    const payload: Record<string, unknown> = {
+      file_url: fileUrl,
+      message,
+    };
+
+    if (storageKey) {
+      payload.storage_key = storageKey;
+    }
+    if (fileName) {
+      payload.file_name = fileName;
+    }
+    if (typeof fileSize === "number") {
+      payload.file_size = fileSize;
+    }
+    if (fileType) {
+      payload.file_type = fileType;
+    }
+
     await apiFetch<{ message?: string }>(`/pyw/${pywId}/versions`, {
       method: "POST",
-      body: JSON.stringify({
-        file_url: fileUrl,
-        storage_key: storageKey || "",
-        message,
-      }),
+      token,
+      body: JSON.stringify(payload),
     });
   }
 
@@ -201,6 +224,9 @@ export class PywService {
     if (storageKey) {
       formData.append("storage_key", storageKey);
     }
+    formData.append("file_name", file.name);
+    formData.append("file_size", String(file.size));
+    formData.append("file_type", file.type || "application/octet-stream");
 
     await apiFetch<{ message?: string }>(`/pyw/${pywId}/versions`, {
       method: "POST",

@@ -151,15 +151,33 @@ export class FileVersionService {
     pywId: string,
     fileUrl: string,
     message: string = "",
-    token?: string
+    storageKey?: string,
+    fileName?: string,
+    fileSize?: number,
+    fileType?: string,
+    token?: string,
   ): Promise<{ message: string }> {
+    const payload: Record<string, unknown> = {
+      file_url: fileUrl,
+      message,
+    };
+    if (storageKey) {
+      payload.storage_key = storageKey;
+    }
+    if (fileName) {
+      payload.file_name = fileName;
+    }
+    if (typeof fileSize === "number") {
+      payload.file_size = fileSize;
+    }
+    if (fileType) {
+      payload.file_type = fileType;
+    }
+
     return apiFetch<{ message: string }>(`/pyw/${pywId}/versions`, {
       method: "POST",
       token,
-      body: JSON.stringify({
-        file_url: fileUrl,
-        message: message,
-      }),
+      body: JSON.stringify(payload),
     });
   }
 

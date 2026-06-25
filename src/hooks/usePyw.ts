@@ -28,7 +28,7 @@ export const usePywDetail = (pywId: string) => {
       if (!pywId) {
         throw new Error("Identifiant PYW manquant.");
       }
-      return PywService.getDetail(pywId);
+      return PywService.getDetail(pywId, AuthService.getAccessToken());
     },
     enabled: !!pywId,
     staleTime: DEFAULT_STALE_TIME,
