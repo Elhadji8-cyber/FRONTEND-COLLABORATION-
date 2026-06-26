@@ -6,6 +6,7 @@ import { SectionTitle } from "../component/ui/section-title";
 import { Button } from "../component/ui/button";
 import { AuthService } from "@/services/auth.service";
 import { useProjects } from "@/hooks/useProjects";
+import { FaPlus } from "react-icons/fa";
 
 export default function ProjectsPage() {
   const { projectsQuery, enrichedProjects, companyQuery, deleteProjectMutation } = useProjects();
@@ -21,9 +22,12 @@ export default function ProjectsPage() {
           title="Projects"
           subtitle="Pilotage de tous les projets actifs de l'entreprise."
           action={
-            <Button onClick={() => window.dispatchEvent(new Event("openProjectModal"))}>
-              <span className="material-symbols-outlined text-base">add</span>
-              New Project
+            <Button
+              onClick={() => window.dispatchEvent(new Event("openProjectModal"))}
+              className="gap-2 rounded-2xl px-4 py-2"
+            >
+              <FaPlus className="text-sm" />
+              <span>Add New Project</span>
             </Button>
           }
         />
@@ -48,14 +52,7 @@ export default function ProjectsPage() {
           </div>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <button
-            onClick={() => window.dispatchEvent(new Event("openProjectModal"))}
-            className="flex h-full min-h-[320px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-outline-variant/30 bg-surface-container-lowest text-on-surface-variant transition-all hover:border-primary hover:bg-surface-container-low hover:text-primary"
-          >
-            <span className="material-symbols-outlined mb-2 text-4xl">add_circle</span>
-            <span className="font-semibold">Créer un nouveau projet</span>
-          </button>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
           {enrichedProjects.map((project) => (
             <ProjectCard
               key={project.id}

@@ -11,6 +11,7 @@ import { FaRegComment } from "react-icons/fa";
 import { GrValidate } from "react-icons/gr";
 import { VscDiffModified } from "react-icons/vsc";
 import { MdDeleteOutline, MdMoreVert, MdPersonOutline, MdOutlineAssignmentTurnedIn } from "react-icons/md";
+import { Card } from "../ui/card";
 
 export type PywStatus = "pending" | "approved" | "rejected" | "modified";
 
@@ -109,77 +110,77 @@ export function PywCard({
     }, []);
 
     return (
-        // NOTE: Framer Motion ajoute ici une animation de survol légère pour les cartes PYW sans modifier leur logique métier.
-        <motion.article
-            className={cn(
-                "group flex min-h-[320px] flex-col overflow-hidden rounded-[2rem] border p-7 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[340px] sm:p-8",
-                card.status === "approved"
-                    ? "border-emerald-300"
-                    : card.status === "rejected"
-                        ? "border-red-300"
-                        : card.status === "modified"
-                            ? "border-orange-300"
-                            : "border-slate-300",
-            )}
-            style={{ backgroundColor: card.background, color: card.color }}
-        >
-            <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <p
-                            className="text-xs font-semibold uppercase tracking-[0.2em] leading-snug"
-                            style={{ color: card.color }}
-                        >
-                            {card.title}
-                        </p>
-                        <span
-                            className={cn(
-                                "rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]",
-                                statusStyles[card.status],
-                            )}
-                        >
-                            {statusLabels[card.status]}
-                        </span>
-                    </div>
-                    <div className="mt-4 flex items-center gap-3">
-                        <div className="flex h-15 w-15 items-center justify-center overflow-hidden rounded-full bg-white/90 text-sm font-semibold text-on-surface shadow-sm">
-                            {card.avatarUrl ? (
-                                <img
-                                    src={card.avatarUrl}
-                                    alt={card.owner}
-                                    className="h-full w-full object-cover"
-                                />
-                            ) : (
-                                <span className="text-sm font-semibold text-on-surface">
-                                    {card.owner
-                                        .split(" ")
-                                        .map((part) => part[0])
-                                        .slice(0, 2)
-                                        .join("")
-                                        .toUpperCase()}
-                                </span>
-                            )}
+        <motion.article className="h-full">
+            <Card
+                className={cn(
+                    "group flex min-h-[280px] flex-col overflow-hidden rounded-3xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[300px] sm:p-6",
+                    card.status === "approved"
+                        ? "border-emerald-300"
+                        : card.status === "rejected"
+                            ? "border-red-300"
+                            : card.status === "modified"
+                                ? "border-orange-300"
+                                : "border-slate-300",
+                )}
+                style={{ backgroundColor: card.background, color: card.color }}
+            >
+                <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p
+                                className="text-xs font-semibold uppercase tracking-[0.2em] leading-snug"
+                                style={{ color: card.color }}
+                            >
+                                {card.title}
+                            </p>
+                            <span
+                                className={cn(
+                                    "rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]",
+                                    statusStyles[card.status],
+                                )}
+                            >
+                                {statusLabels[card.status]}
+                            </span>
                         </div>
-                        <div className="min-w-0">
-                            <h3 className="text-lg font-semibold text-on-surface truncate">{card.owner}</h3>
+                        <div className="mt-4 flex items-center gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white/90 text-sm font-semibold text-on-surface shadow-sm">
+                                {card.avatarUrl ? (
+                                    <img
+                                        src={card.avatarUrl}
+                                        alt={card.owner}
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-sm font-semibold text-on-surface">
+                                        {card.owner
+                                            .split(" ")
+                                            .map((part) => part[0])
+                                            .slice(0, 2)
+                                            .join("")
+                                            .toUpperCase()}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="truncate text-base font-semibold text-on-surface">{card.owner}</h3>
+                            </div>
                         </div>
+                        {card.description ? (
+                            <p className="mt-3 text-sm leading-6 text-on-surface-variant line-clamp-3">
+                                {card.description}
+                            </p>
+                        ) : null}
                     </div>
-                    {card.description ? (
-                        <p className="mt-3 text-sm leading-6 text-on-surface-variant">
-                            {card.description}
-                        </p>
-                    ) : null}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/80 text-on-surface shadow-sm">
+                        <MdOutlineAssignmentTurnedIn className="h-5 w-5" aria-hidden />
+                    </div>
                 </div>
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/80 text-on-surface shadow-sm">
-                    <MdOutlineAssignmentTurnedIn className="h-6 w-6" aria-hidden />
-                </div>
-            </div>
 
-            <p className="mt-auto pt-6 text-sm font-medium text-on-surface-variant">{card.date}</p>
+                <p className="mt-auto pt-5 text-sm font-medium text-on-surface-variant">{card.date}</p>
 
             {/* Owner Actions */}
             {isOwner ? (
-                <div className="mt-5 space-y-4">
+                <div className="mt-4 space-y-4">
                     {/* Buttons and Members in flex row */}
                     <div className="flex items-center justify-between gap-4">
                         {/* Buttons */}
@@ -237,7 +238,7 @@ export function PywCard({
                                 disabled={isSubmitting}
                                 onClick={() => onSendDirectMessage?.(card)}
                                 title="Message direct au membre"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-surface-container text-on-surface transition hover:bg-surface-container-high disabled:opacity-50"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container text-on-surface transition hover:bg-surface-container-high disabled:opacity-50"
                             >
                                 <FaRegComment className="h-5 w-5" aria-hidden />
                                 <span className="sr-only">Message direct au membre</span>
@@ -245,7 +246,7 @@ export function PywCard({
                             {canDelete && onDelete ? (
                                 <details className="relative">
                                     <summary
-                                        className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-surface-container text-on-surface transition hover:bg-surface-container-high"
+                                        className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-surface-container text-on-surface transition hover:bg-surface-container-high"
                                         title="Plus d’actions"
                                     >
                                         <MdMoreVert className="h-5 w-5" aria-hidden />
@@ -298,7 +299,7 @@ export function PywCard({
 
                     {/* Expose files when card is open */}
                     {isOpen && (
-                        <div className="rounded-3xl border border-outline-variant/50 bg-surface-container-high p-4">
+                        <div className="rounded-2xl border border-outline-variant/50 bg-surface-container-high p-3">
                             <div className="flex items-center justify-between gap-2 pb-3">
                                 <p className="text-sm font-semibold text-on-surface">Fichiers téléchargés</p>
                                 <span className="text-xs text-on-surface-variant">
@@ -354,12 +355,13 @@ export function PywCard({
                 disabled={isSubmitting}
                 onClick={() => onOpen(card)}
                 className={cn(
-                    "rounded-2xl bg-primary px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-50",
-                    isOwner ? "mt-2.5" : "mt-5",
+                    "rounded-2xl bg-primary px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-50",
+                    isOwner ? "mt-2" : "mt-4",
                 )}
             >
                 Ouvrir
             </button>
+            </Card>
         </motion.article>
     );
 }

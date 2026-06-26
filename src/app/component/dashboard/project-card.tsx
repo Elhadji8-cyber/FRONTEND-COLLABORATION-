@@ -67,69 +67,72 @@ export function ProjectCard({
     const displayedMembers = members ?? [];
 
     return (
-        // NOTE: la carte de projet garde son design actuel, mais bénéficie désormais d’une animation douce et d’un conteneur shadcn plus propre.
-        <motion.article initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4 }}>
-            <Card className="group flex h-full flex-col overflow-hidden rounded-[2rem] border border-outline-variant/10 bg-surface-container-lowest shadow-sm transition-all hover:shadow-md">
-            <div className="relative overflow-hidden bg-surface-container-high px-6 py-5">
-                <div className={`absolute left-0 top-0 h-full w-2 ${accentClasses.bar}`} />
+        <motion.article
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -4 }}
+            className="h-full"
+        >
+            <Card className="group flex h-full flex-col overflow-hidden rounded-3xl border border-outline-variant/20 bg-surface-container-lowest shadow-sm transition-all hover:shadow-md">
+                <div className="relative overflow-hidden bg-surface-container-high px-5 py-4">
+                    <div className={`absolute left-0 top-0 h-full w-2 ${accentClasses.bar}`} />
 
-                <div className="flex items-start justify-between gap-3">
-                    <div>
-                        <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${accentClasses.text}`}>
-                            {zone}
-                        </p>
-                        <h3 className="mt-3 text-xl font-bold text-on-surface">{title}</h3>
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${accentClasses.text}`}>
+                                {zone}
+                            </p>
+                            <h3 className="mt-2 text-lg font-semibold text-on-surface">{title}</h3>
+                        </div>
+
+                        {formattedDate ? (
+                            <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${accentClasses.text} bg-primary-container/10`}>
+                                {formattedDate}
+                            </span>
+                        ) : null}
+                    </div>
+                </div>
+
+                <div className="relative flex flex-1 flex-col p-5">
+                    <div className="mb-4 line-clamp-3 text-sm leading-6 text-on-surface-variant">
+                        {description || "Aucune description fournie pour ce projet."}
                     </div>
 
-                    {formattedDate ? (
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${accentClasses.text} bg-primary-container/10`}>
-                            {formattedDate}
-                        </span>
-                    ) : null}
-                </div>
-            </div>
-
-            <div className="relative p-6 flex-1 flex flex-col">
-                <div className="mb-4 text-sm text-on-surface-variant">
-                    {description || "Aucune description fournie pour ce projet."}
-                </div>
-
-                <div className="mt-auto">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="mt-auto flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (id && onOpen) onOpen(id); }}
                                 title="Ouvrir"
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-on-surface transition hover:bg-surface-container"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-on-surface shadow-sm transition hover:bg-surface-container"
                             >
-                                <FaFolderOpen className="text-lg" />
+                                <FaFolderOpen className="text-base" />
                             </button>
                             <button
                                 type="button"
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (id && onMessage) onMessage(id); }}
                                 title="Message"
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-on-surface transition hover:bg-surface-container"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-on-surface shadow-sm transition hover:bg-surface-container"
                             >
-                                <FiMessageSquare className="text-lg" />
+                                <FiMessageSquare className="text-base" />
                             </button>
                             {isOwner && (
                                 <button
                                     type="button"
                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (id && onDelete) onDelete(id); }}
                                     title="Supprimer"
-                                    className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-error-container text-error transition hover:bg-error/20"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-error-container text-error shadow-sm transition hover:bg-error/20"
                                 >
-                                    <MdDeleteOutline className="text-lg" />
+                                    <MdDeleteOutline className="text-base" />
                                 </button>
                             )}
                         </div>
 
-                        <div className="flex items-center -space-x-3">
+                        <div className="flex items-center -space-x-2">
                             {displayedMembers.map((member) => (
                                 <div
                                     key={member.id}
-                                    className="relative z-10 h-12 w-12 overflow-hidden rounded-full border-2 border-white bg-surface-container-high text-sm font-semibold text-on-surface shadow-sm"
+                                    className="relative z-10 h-10 w-10 overflow-hidden rounded-full border-2 border-white bg-surface-container-high text-sm font-semibold text-on-surface shadow-sm"
                                     title={member.name}
                                 >
                                     {member.avatarUrl ? (
@@ -140,7 +143,7 @@ export function ProjectCard({
                                         />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center bg-surface-container-high text-on-surface">
-                                            <MdPersonOutline className="text-xl" />
+                                            <MdPersonOutline className="text-lg" />
                                         </div>
                                     )}
                                 </div>
@@ -148,20 +151,6 @@ export function ProjectCard({
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/*
-        TODO: le parent peut mapper ici les projets venant du backend Go.
-
-        Exemple backend :
-        GET /api/v1/users/:id/projects
-        ou GET /api/v1/companies/:id/projects
-
-        Exemple mapping :
-        zone -> projet.section / projet.zone
-        title -> projet.name
-        progress -> projet.progress_percent
-      */}
             </Card>
         </motion.article>
     );

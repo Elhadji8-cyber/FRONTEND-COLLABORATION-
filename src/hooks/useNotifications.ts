@@ -71,9 +71,38 @@ export function useNotifications() {
     [refreshUnreadCount, token]
   );
 
+  const markAllAsRead = useCallback(async () => {
+    if (!userId || notifications.length === 0) return;
+
+    const unreadNotifications = notifications.filter((notification) => !notification.isRead);
+    if (unreadNotifications.length === 0) return;
+
+    try {
+      await Promise.all(
+        unreadNotifications.map((notification) => NotificationService.markAsRead(notification.id, token || undefined))
+      );
+      setNotifications((current) => current.map((notification) => ({ ...notification, isRead: true })));
+      setUnreadCount(0);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+      setError((err as Error)?.message || "Impossible de marquer toutes les notifications comme lues.");
+    }
+  }, [notifications, token, userId]);
+
   useEffect(() => {
     refreshUnreadCount();
   }, [refreshUnreadCount]);
+
+  useEffect(() => {
+    if (!userId || !token) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
+    void refreshNotifications();
+  }, [refreshNotifications, token, userId]);
 
   useEffect(() => {
     if (!userId || !companyId || !token) {
@@ -122,6 +151,7 @@ export function useNotifications() {
     isLoadingList,
     refreshNotifications,
     markAsRead,
+    markAllAsRead,
     error,
   };
 }

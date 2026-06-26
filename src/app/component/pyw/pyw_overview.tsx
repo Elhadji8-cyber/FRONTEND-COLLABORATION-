@@ -318,7 +318,7 @@ export function PYWOverview({ projectId = "", companyId = "", projectName, isOwn
                         Aucun PYW trouvé pour l&apos;utilisateur recherché.
                     </p>
                 ) : (
-                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                     {visibleCards.map((card) => (
                         <PywCard
                             key={card.id}
