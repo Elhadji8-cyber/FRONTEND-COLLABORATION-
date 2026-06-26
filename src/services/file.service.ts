@@ -1,6 +1,17 @@
 import { apiFetch, API_BASE_URL } from "@/lib/api";
 import type { BackendFile, ProjectFile } from "@/types/file";
 
+export type UploadProgressItem = {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  status: "queued" | "uploading" | "completed" | "error";
+  progress: number;
+  previewUrl?: string;
+  error?: string;
+};
+
 function mapBackendFile(file: BackendFile): ProjectFile {
   return {
     id: file._id || file.id || "",
@@ -109,6 +120,7 @@ export class FileService {
     uploadedBy: string;
     visibility?: string;
     token?: string;
+    onProgress?: (progress: number) => void;
   }): Promise<ProjectFile> {
     const formData = new FormData();
     formData.append("file", payload.file);
@@ -120,13 +132,126 @@ export class FileService {
       formData.append("visibility", payload.visibility);
     }
 
-    const file = await apiFetch<BackendFile>("/files/upload", {
-      method: "POST",
-      token: payload.token,
-      body: formData,
+    const xhr = new XMLHttpRequest();
+    const file = await new Promise<BackendFile>((resolve, reject) => {
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable && payload.onProgress) {
+          payload.onProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      });
+
+      xhr.addEventListener("load", () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText) as { data?: BackendFile; error?: { message?: string } };
+            if (response.data) {
+              resolve(response.data);
+              return;
+            }
+            reject(new Error(response.error?.message || "Upload failed"));
+          } catch {
+            reject(new Error("Upload response could not be parsed"));
+          }
+        } else {
+          reject(new Error(xhr.responseText || `Upload failed with status ${xhr.status}`));
+        }
+      });
+
+      xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
+      xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
+
+      xhr.open("POST", `${API_BASE_URL}/files/upload`);
+      if (payload.token) {
+        xhr.setRequestHeader("Authorization", `Bearer ${payload.token}`);
+      }
+      xhr.send(formData);
     });
 
     return mapBackendFile(file);
+  }
+
+  static async uploadMultipart(payload: {
+    file: File;
+    projectId: string;
+    companyId: string;
+    uploadedBy: string;
+    visibility?: string;
+    token?: string;
+    onProgress?: (progress: number) => void;
+  }): Promise<ProjectFile> {
+    const initResponse = await apiFetch<{ storage_key: string; upload_id: string; file_name: string; file_type: string; file_size: number }>(
+      "/files/multipart/init",
+      {
+        method: "POST",
+        token: payload.token,
+        body: JSON.stringify({
+          project_id: payload.projectId,
+          company_id: payload.companyId,
+          uploaded_by: payload.uploadedBy,
+          file_name: payload.file.name,
+          file_type: payload.file.type || "application/octet-stream",
+          file_size: payload.file.size,
+        }),
+      }
+    );
+
+    const partSize = 5 * 1024 * 1024;
+    const totalParts = Math.ceil(payload.file.size / partSize);
+    const parts: Array<{ part_number: number; etag: string }> = [];
+
+    for (let index = 0; index < totalParts; index += 1) {
+      const start = index * partSize;
+      const end = Math.min(start + partSize, payload.file.size);
+      const blob = payload.file.slice(start, end);
+      const partNumber = index + 1;
+
+      const partUrlResponse = await apiFetch<{ url: string }>("/files/multipart/part-url", {
+        method: "POST",
+        token: payload.token,
+        body: JSON.stringify({
+          storage_key: initResponse.storage_key,
+          upload_id: initResponse.upload_id,
+          part_number: partNumber,
+        }),
+      });
+
+      const uploadPartResponse = await fetch(partUrlResponse.url, {
+        method: "PUT",
+        body: blob,
+      });
+
+      if (!uploadPartResponse.ok) {
+        throw new Error(`Échec de l’upload de la partie ${partNumber}`);
+      }
+
+      const etag = uploadPartResponse.headers.get("etag") || "";
+      if (!etag) {
+        throw new Error(`ETag manquant pour la partie ${partNumber}`);
+      }
+      parts.push({ part_number: partNumber, etag });
+
+      const progress = Math.round(((index + 1) / totalParts) * 100);
+      payload.onProgress?.(progress);
+    }
+
+    const completed = await apiFetch<BackendFile>("/files/multipart/complete", {
+      method: "POST",
+      token: payload.token,
+      body: JSON.stringify({
+        project_id: payload.projectId,
+        company_id: payload.companyId,
+        uploaded_by: payload.uploadedBy,
+        file_name: payload.file.name,
+        file_type: payload.file.type || "application/octet-stream",
+        file_size: payload.file.size,
+        storage_key: initResponse.storage_key,
+        upload_id: initResponse.upload_id,
+        visibility: payload.visibility || "PRIVATE",
+        parts,
+      }),
+    });
+
+    return mapBackendFile(completed);
   }
 
   static async downloadFile(fileId: string, companyId?: string, token?: string): Promise<Blob> {
@@ -143,7 +268,8 @@ export class FileService {
     fileUrl?: string,
     fileName?: string,
     companyId?: string,
-    token?: string
+    token?: string,
+    onProgress?: (progress: number) => void
   ): Promise<Blob> {
     const resolvedStorageKey = (storageKey || "").trim() || extractStorageKeyFromUrl(fileUrl);
 
@@ -163,6 +289,42 @@ export class FileService {
       params.set("file_name", fileName);
     }
 
-    return fetchBlob(`${API_BASE_URL}/files/download?${params.toString()}`, token);
+    const absoluteUrl = `${API_BASE_URL}/files/download?${params.toString()}`;
+    const response = await fetch(absoluteUrl, {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Download failed with status ${response.status}`);
+    }
+
+    const contentLength = response.headers.get("content-length");
+    const total = contentLength ? Number.parseInt(contentLength, 10) : 0;
+    const reader = response.body?.getReader();
+
+    if (!reader) {
+      return response.blob();
+    }
+
+    const chunks: ArrayBuffer[] = [];
+    let received = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
+        received += value.length;
+        if (total > 0 && onProgress) {
+          onProgress(Math.round((received / total) * 100));
+        }
+      }
+    }
+
+    return new Blob(chunks);
   }
 }

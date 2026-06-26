@@ -4,13 +4,14 @@ import { useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/app/component/layout/app-shell";
+import { UploadProgressList } from "@/app/component/files/upload-progress-list";
 import { AuthService } from "@/services/auth.service";
 import { PywFilesSectionService } from "@/services/pyw-files-section.service";
-import { FileService } from "@/services/file.service";
+import { FileService, type UploadProgressItem } from "@/services/file.service";
 import { FileVersionService, getVersionDownloadFileName } from "@/services/file-version.service";
 import { VersionTimeline } from "@/app/component/file-version/version-timeline";
 import { VersionDetailModal } from "@/app/component/file-version/version-detail-modal";
-import { usePywDetail, usePywReview, usePywVersions, useSubmitPywVersion } from "@/hooks/usePyw";
+import { usePywDetail, usePywReview, usePywVersions } from "@/hooks/usePyw";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import type { FileVersion } from "@/types/pyw";
 
@@ -29,6 +30,7 @@ export default function PywDetailPage() {
     const [ownerComment, setOwnerComment] = useState("");
     const [selectedVersion, setSelectedVersion] = useState<FileVersion | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [uploadItems, setUploadItems] = useState<UploadProgressItem[]>([]);
 
     const session = AuthService.getSession();
     const isOwner = canReviewPyw(session?.user.role);
@@ -38,7 +40,6 @@ export default function PywDetailPage() {
     const { data: pyw, isLoading: isLoadingPyw, error: pywError } = usePywDetail(pywId);
     const { data: versions = [], isLoading: isLoadingVersions, error: versionsError } = usePywVersions(pywId, session?.accessToken);
     const reviewMutation = usePywReview(pyw?.project_id);
-    const submitVersionMutation = useSubmitPywVersion(pywId);
     const status = useMemo(() => {
         if (!pyw) return "pending" as const;
         if (pyw.status === "modification_requested") return "modified" as const;
@@ -60,25 +61,80 @@ export default function PywDetailPage() {
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
 
         setIsUploading(true);
         setError("");
+
+        const newItems = files.map((file, index) => ({
+            id: `${file.name}-${file.size}-${index}-${Date.now()}`,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type || "application/octet-stream",
+            status: "queued" as const,
+            progress: 0,
+            previewUrl: file.type.startsWith("image/") || file.type === "application/pdf"
+                ? URL.createObjectURL(file)
+                : undefined,
+        }));
+        setUploadItems((prev) => [...newItems, ...prev]);
 
         try {
             if (!session?.accessToken) {
                 throw new Error("Session manquante");
             }
 
-            for (let i = 0; i < files.length; i++) {
-                await submitVersionMutation.mutateAsync({
-                    file: files[i],
-                    token: session.accessToken,
-                });
+            for (const [index, file] of files.entries()) {
+                const itemId = newItems[index]?.id;
+                if (!itemId) continue;
+
+                setUploadItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, status: "uploading", progress: 0 } : item)));
+
+                try {
+                    const uploadedFile = file.size > 5 * 1024 * 1024
+                        ? await FileService.uploadMultipart({
+                            file,
+                            projectId: pyw?.project_id || "",
+                            companyId: session.companyId || "",
+                            uploadedBy: session.user.id,
+                            visibility: "PRIVATE",
+                            token: session.accessToken,
+                            onProgress: (progress) => {
+                                setUploadItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, status: "uploading", progress } : item)));
+                            },
+                        })
+                        : await FileService.upload({
+                            file,
+                            projectId: pyw?.project_id || "",
+                            companyId: session.companyId || "",
+                            uploadedBy: session.user.id,
+                            visibility: "PRIVATE",
+                            token: session.accessToken,
+                            onProgress: (progress) => {
+                                setUploadItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, status: "uploading", progress } : item)));
+                            },
+                        });
+
+                    await FileVersionService.submitVersion(
+                        pywId,
+                        uploadedFile.downloadUrl || "",
+                        `Upload : ${file.name}`,
+                        uploadedFile.storageKey,
+                        uploadedFile.fileName,
+                        uploadedFile.fileSize,
+                        uploadedFile.fileType,
+                        session.accessToken,
+                    );
+
+                    await queryClient.invalidateQueries({ queryKey: ["pyw", pywId, "versions"] });
+                    setUploadItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, status: "completed", progress: 100 } : item)));
+                } catch (err) {
+                    const message = err instanceof Error ? err.message : "Erreur lors de l'upload";
+                    setUploadItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, status: "error", progress: item.progress, error: message } : item)));
+                    setError(message);
+                }
             }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur lors de l'upload");
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) {
@@ -234,6 +290,8 @@ export default function PywDetailPage() {
                                     {error}
                                 </div>
                             )}
+
+                            <UploadProgressList items={uploadItems} />
 
                             {/* Actions Grid - Plus compact */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
