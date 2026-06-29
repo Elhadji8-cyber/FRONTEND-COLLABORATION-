@@ -194,7 +194,7 @@ export default function PywDetailPage() {
 
         try {
             const downloadFileName = getVersionDownloadFileName(version);
-            const blob = await FileService.downloadFileByReference(
+            const downloadUrl = await FileService.getDownloadUrlByReference(
                 version.storageKey,
                 version.fileUrl,
                 downloadFileName,
@@ -202,14 +202,13 @@ export default function PywDetailPage() {
                 session.accessToken,
             );
 
-            const objectUrl = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
-            anchor.href = objectUrl;
-            anchor.download = downloadFileName;
+            anchor.href = downloadUrl;
+            anchor.target = "_blank";
+            anchor.rel = "noreferrer noopener";
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
-            URL.revokeObjectURL(objectUrl);
         } catch (err) {
             const message = err instanceof Error ? err.message : String(err);
             setError(message || "Erreur lors du téléchargement du fichier.");

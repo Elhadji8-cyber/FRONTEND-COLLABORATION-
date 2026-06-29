@@ -34,7 +34,7 @@ export function PywDetailPanel({ card, versions, isLoadingVersions = false, onCl
         }
 
         try {
-            const blob = await FileService.downloadFileByReference(
+            const downloadUrl = await FileService.getDownloadUrlByReference(
                 storageKey,
                 fileUrl,
                 fileName,
@@ -42,14 +42,13 @@ export function PywDetailPanel({ card, versions, isLoadingVersions = false, onCl
                 session.accessToken,
             );
 
-            const objectUrl = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
-            anchor.href = objectUrl;
-            anchor.download = fileName;
+            anchor.href = downloadUrl;
+            anchor.target = "_blank";
+            anchor.rel = "noreferrer noopener";
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
-            URL.revokeObjectURL(objectUrl);
         } catch (error) {
             console.error("Erreur lors du téléchargement du fichier :", error);
         }

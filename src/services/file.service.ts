@@ -90,7 +90,30 @@ async function fetchBlob(url: string, token?: string, onProgress?: (progress: nu
     throw new Error(text || `Download failed with status ${res.status}`);
   }
 
-  return res.blob();
+  if (!onProgress || !res.body) {
+    return res.blob();
+  }
+
+  const contentLength = Number(res.headers.get("content-length") || "0");
+  const reader = res.body.getReader();
+  const chunks: Array<Uint8Array> = [];
+  let received = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    if (value) {
+      chunks.push(value as Uint8Array);
+      received += value.length;
+      if (contentLength > 0) {
+        onProgress(Math.round((received / contentLength) * 100));
+      }
+    }
+  }
+
+  return new Blob(chunks as BlobPart[]);
 }
 
 export class FileService {
@@ -254,7 +277,7 @@ export class FileService {
     return mapBackendFile(completed);
   }
 
-  static async downloadFile(fileId: string, companyId?: string, token?: string): Promise<Blob> {
+  static async getDownloadUrl(fileId: string, companyId?: string, token?: string): Promise<string> {
     const params = new URLSearchParams();
     if (companyId) {
       params.set("requester_company_id", companyId);
@@ -268,17 +291,21 @@ export class FileService {
       }
     );
 
-    return fetchBlob(response.download_url);
+    return response.download_url;
   }
 
-  static async downloadFileByReference(
+  static async downloadFile(fileId: string, companyId?: string, token?: string): Promise<Blob> {
+    const downloadUrl = await this.getDownloadUrl(fileId, companyId, token);
+    return fetchBlob(downloadUrl);
+  }
+
+  static async getDownloadUrlByReference(
     storageKey?: string,
     fileUrl?: string,
     fileName?: string,
     companyId?: string,
     token?: string,
-    onProgress?: (progress: number) => void
-  ): Promise<Blob> {
+  ): Promise<string> {
     const resolvedStorageKey = (storageKey || "").trim() || extractStorageKeyFromUrl(fileUrl);
 
     if (!resolvedStorageKey) {
@@ -305,6 +332,18 @@ export class FileService {
       }
     );
 
-    return fetchBlob(response.download_url, undefined, onProgress);
+    return response.download_url;
+  }
+
+  static async downloadFileByReference(
+    storageKey?: string,
+    fileUrl?: string,
+    fileName?: string,
+    companyId?: string,
+    token?: string,
+    onProgress?: (progress: number) => void
+  ): Promise<Blob> {
+    const downloadUrl = await this.getDownloadUrlByReference(storageKey, fileUrl, fileName, companyId, token);
+    return fetchBlob(downloadUrl, undefined, onProgress);
   }
 }

@@ -125,17 +125,14 @@ export default function ProjectFilesPage() {
         }
 
         try {
-            const blob = await FileService.downloadFile(fileId, session.companyId, session.accessToken);
-            const url = window.URL.createObjectURL(blob);
+            const downloadUrl = await FileService.getDownloadUrl(fileId, session.companyId, session.accessToken);
             const anchor = document.createElement("a");
-            anchor.href = url;
-            anchor.download = fileName;
+            anchor.href = downloadUrl;
             anchor.target = "_blank";
             anchor.rel = "noreferrer noopener";
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
-            window.URL.revokeObjectURL(url);
         } catch (err) {
             alert("Erreur lors du téléchargement : " + (err instanceof Error ? err.message : err));
         }
