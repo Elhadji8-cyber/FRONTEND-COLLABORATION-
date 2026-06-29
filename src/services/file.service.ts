@@ -69,7 +69,7 @@ function extractStorageKeyFromUrl(fileUrl?: string): string | undefined {
   return undefined;
 }
 
-async function fetchBlob(url: string, token?: string): Promise<Blob> {
+async function fetchBlob(url: string, token?: string, onProgress?: (progress: number) => void): Promise<Blob> {
   const absoluteUrl = toAbsoluteApiUrl(url);
 
   const res = await fetch(absoluteUrl, {
@@ -260,7 +260,15 @@ export class FileService {
       params.set("requester_company_id", companyId);
     }
 
-    return fetchBlob(`${API_BASE_URL}/files/${fileId}/download?${params.toString()}`, token);
+    const response = await apiFetch<{ download_url: string }>(
+      `/files/${fileId}/download?${params.toString()}`,
+      {
+        method: "GET",
+        token,
+      }
+    );
+
+    return fetchBlob(response.download_url);
   }
 
   static async downloadFileByReference(
@@ -289,42 +297,14 @@ export class FileService {
       params.set("file_name", fileName);
     }
 
-    const absoluteUrl = `${API_BASE_URL}/files/download?${params.toString()}`;
-    const response = await fetch(absoluteUrl, {
-      method: "GET",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new Error(`Download failed with status ${response.status}`);
-    }
-
-    const contentLength = response.headers.get("content-length");
-    const total = contentLength ? Number.parseInt(contentLength, 10) : 0;
-    const reader = response.body?.getReader();
-
-    if (!reader) {
-      return response.blob();
-    }
-
-    const chunks: ArrayBuffer[] = [];
-    let received = 0;
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) {
-        chunks.push(value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength));
-        received += value.length;
-        if (total > 0 && onProgress) {
-          onProgress(Math.round((received / total) * 100));
-        }
+    const response = await apiFetch<{ download_url: string }>(
+      `/files/download?${params.toString()}`,
+      {
+        method: "GET",
+        token,
       }
-    }
+    );
 
-    return new Blob(chunks);
+    return fetchBlob(response.download_url, undefined, onProgress);
   }
 }
