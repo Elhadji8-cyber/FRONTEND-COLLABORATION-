@@ -162,20 +162,21 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-surface p-8 shadow-2xl relative">
+      <div className="relative w-full max-w-md max-h-[85vh] overflow-hidden rounded-2xl bg-surface p-6 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface"
         >
           <span className="material-symbols-outlined">close</span>
         </button>
-        
-        <h2 className="text-2xl font-bold mb-2">Nouveau Projet</h2>
-        <p className="text-sm text-on-surface-variant mb-6">
-          Définissez les informations de base et ajoutez les fichiers du projet.
-        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="max-h-[calc(85vh-2rem)] overflow-y-auto pr-2">
+          <h2 className="text-xl font-bold mb-2">Nouveau Projet</h2>
+          <p className="text-sm text-on-surface-variant mb-5">
+            Définissez les informations de base et ajoutez les fichiers du projet.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
               Nom du projet
@@ -272,7 +273,8 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
           >
             {isLoading ? "Création en cours..." : "Créer le projet"}
           </button>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
